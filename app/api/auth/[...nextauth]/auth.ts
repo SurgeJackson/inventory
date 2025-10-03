@@ -6,6 +6,7 @@ import dbConnect from '@/lib/dbConnect'
 import { IWarehouse } from '@/models/interfaces'
 
 export const config = {
+  trustHost: true,
   session: {
     strategy: 'jwt',
   },
