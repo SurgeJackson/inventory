@@ -9,7 +9,10 @@ export async function get1cItems(warehouseId: string) {
   )
 
   const url =
-    process.env.URL_1C + warehouseId + "'&$orderby=ВНаличииBalance desc"
+    process.env.URL_1C +
+    "AccumulationRegister_СвободныеОстатки/Balance(Dimensions='Номенклатура, Склад')?&$format=json&$expand=Склад,Номенклатура&$select=Склад/Ref_Key,Склад/Description,ВНаличииBalance,Номенклатура/Артикул,Номенклатура/Description,Номенклатура/Ref_Key&$filter=Склад_Key eq guid'" +
+    warehouseId +
+    "'&$orderby=ВНаличииBalance desc"
 
   const response = await fetch(url, {
     headers: {
