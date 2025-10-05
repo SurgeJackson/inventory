@@ -7,6 +7,7 @@ import {
   getAllItemsWithImages,
 } from '@/lib/actions/item.actions'
 import { auth } from './api/auth/[...nextauth]/auth'
+import { getAllZones } from '@/lib/actions/zone.action'
 
 export default async function SWRProvider({
   children,
@@ -19,6 +20,9 @@ export default async function SWRProvider({
     ['getAllCategories']: (await getAllCategories()).categories,
     ['getAllWarehouses']: (await getAllWarehouses()).warehouses,
     ['getAllUsers']: (await getAllUsers()).users,
+    [`getAllZones(${session?.user.warehouse._id})`]: (
+      await getAllZones(session?.user.warehouse)
+    ).zones,
     [`getAllItemsWithImages(${session?.user.warehouse._id})`]:
       await getAllItemsWithImages(session?.user.warehouse),
     [`getAllIgnoreItems(${session?.user.warehouse._id})`]: (

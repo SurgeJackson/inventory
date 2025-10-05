@@ -36,4 +36,10 @@ export interface IIgnoreItem extends Document {
   warehouse: Types.ObjectId | IWarehouse
 }
 
+export interface IZone extends Document {
+  _id: Types.ObjectId
+  name: string
+  warehouse: Types.ObjectId | IWarehouse
+}
+
 export type FlatItem = { sku: string; name: string; qty: number }

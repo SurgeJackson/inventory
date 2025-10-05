@@ -7,6 +7,7 @@ import {
   itemSchema,
   userSchema,
   warehouseSchema,
+  zoneSchema,
 } from './schemas'
 
 export const Category =
@@ -23,3 +24,5 @@ export const ItemImg = models?.ItemImg || model('ItemImg', itemImgSchema)
 
 export const IgnoreItem =
   models?.IgnoreItem || model('IgnoreItem', ignoreItemSchema)
+
+export const Zone = models?.Zone || model('Zone', zoneSchema)

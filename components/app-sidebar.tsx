@@ -5,6 +5,7 @@ import {
   ChartBarStacked,
   ChevronDown,
   ChevronUp,
+  LandPlot,
   MoveHorizontal,
   Store,
   User,
@@ -65,6 +66,12 @@ const items = [
     title: 'Склады',
     url: 'warehouses',
     icon: Store,
+    isAdmin: true,
+  },
+  {
+    title: 'Зоны хранения',
+    url: 'zones',
+    icon: LandPlot,
     isAdmin: true,
   },
   {

@@ -1,5 +1,12 @@
 import { Schema } from 'mongoose'
-import { ICategory, IIgnoreItem, IItem, IUser, IWarehouse } from './interfaces'
+import {
+  ICategory,
+  IIgnoreItem,
+  IItem,
+  IUser,
+  IWarehouse,
+  IZone,
+} from './interfaces'
 
 export const categorySchema = new Schema<ICategory>(
   {
@@ -62,6 +69,17 @@ export const itemImgSchema = new Schema({
 export const ignoreItemSchema = new Schema<IIgnoreItem>(
   {
     sku: { type: String, required: true },
+    warehouse: {
+      type: Schema.Types.ObjectId,
+      ref: 'Warehouse',
+    },
+  },
+  { timestamps: true }
+)
+
+export const zoneSchema = new Schema<IZone>(
+  {
+    name: { type: String, required: true },
     warehouse: {
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',
