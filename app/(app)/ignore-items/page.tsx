@@ -50,10 +50,10 @@ export default function WarehousesPage() {
   })
 
   const columns: ColumnDef<IWarehouse>[] = [
-    {
-      accessorKey: '_id',
-      header: 'ID',
-    },
+    // {
+    //   accessorKey: '_id',
+    //   header: 'ID',
+    // },
     {
       accessorKey: 'sku',
       header: 'Артикул товара',
