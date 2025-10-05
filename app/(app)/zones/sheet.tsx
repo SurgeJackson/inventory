@@ -89,7 +89,7 @@ export function ZoneSheet({
                   role='combobox'
                   aria-expanded={open}
                   className='w-full justify-between'
-                  disabled={currentUser?.isAdmin}
+                  disabled={!currentUser?.isAdmin}
                 >
                   {warehouseId
                     ? warehouses?.find(
