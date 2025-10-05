@@ -109,22 +109,27 @@ export async function updateItemCode(item: any, code: string) {
 export async function updateItemCategory(item: any, category: string) {
   try {
     await dbConnect()
-    const updatedItem = await Item.findByIdAndUpdate(
-      item._id,
-      {
-        category: category,
-      },
-      {
-        new: true,
-      }
-    )
+    // const updatedItem = await Item.findByIdAndUpdate(
+    //   item._id,
+    //   {
+    //     category: category,
+    //   },
+    //   {
+    //     new: true,
+    //   }
+    // )
 
-    if (!updatedItem) throw new Error('Товар не найден')
+    const updatedItems = await Item.updateMany(
+      { sku: item.sku, warehouse: item.warehouse },
+      { $set: { category: category } }
+    ) // update all items with the same category
+
+    if (!updatedItems) throw new Error('Товар не найден')
 
     return {
       success: true,
       message: 'Категория Товара успешно обновлена',
-      data: JSON.parse(JSON.stringify(updatedItem)),
+      data: JSON.parse(JSON.stringify(updatedItems)),
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
