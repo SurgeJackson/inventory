@@ -5,6 +5,12 @@ export interface ICategory extends Document {
   name: string
 }
 
+export interface IZone extends Document {
+  _id: Types.ObjectId
+  name: string
+  warehouse: Types.ObjectId | IWarehouse
+}
+
 export interface IItem extends Document {
   _id: Types.ObjectId
   sku: string
@@ -13,6 +19,7 @@ export interface IItem extends Document {
   image: string
   category: Types.ObjectId | ICategory
   warehouse: Types.ObjectId | IWarehouse
+  zone: Types.ObjectId | IZone
 }
 
 export interface IWarehouse extends Document {
@@ -33,12 +40,6 @@ export interface IUser extends Document {
 export interface IIgnoreItem extends Document {
   _id: Types.ObjectId
   sku: string
-  warehouse: Types.ObjectId | IWarehouse
-}
-
-export interface IZone extends Document {
-  _id: Types.ObjectId
-  name: string
   warehouse: Types.ObjectId | IWarehouse
 }
 

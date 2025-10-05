@@ -15,6 +15,17 @@ export const categorySchema = new Schema<ICategory>(
   { timestamps: true }
 )
 
+export const zoneSchema = new Schema<IZone>(
+  {
+    name: { type: String, required: true },
+    warehouse: {
+      type: Schema.Types.ObjectId,
+      ref: 'Warehouse',
+    },
+  },
+  { timestamps: true }
+)
+
 export const itemSchema = new Schema<IItem>(
   {
     name: { type: String, required: true },
@@ -29,6 +40,11 @@ export const itemSchema = new Schema<IItem>(
     warehouse: {
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',
+      // required: true,
+    },
+    zone: {
+      type: Schema.Types.ObjectId,
+      ref: 'Zone',
       // required: true,
     },
   },
@@ -69,17 +85,6 @@ export const itemImgSchema = new Schema({
 export const ignoreItemSchema = new Schema<IIgnoreItem>(
   {
     sku: { type: String, required: true },
-    warehouse: {
-      type: Schema.Types.ObjectId,
-      ref: 'Warehouse',
-    },
-  },
-  { timestamps: true }
-)
-
-export const zoneSchema = new Schema<IZone>(
-  {
-    name: { type: String, required: true },
     warehouse: {
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',

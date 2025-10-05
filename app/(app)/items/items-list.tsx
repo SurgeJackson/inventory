@@ -23,10 +23,11 @@ import {
   getAllItemsWithImages,
   updateItemCategory,
   updateItemCode,
+  updateItemZone,
 } from '@/lib/actions/item.actions'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { ICategory, IItem } from '@/models/interfaces'
+import { ICategory, IItem, IZone } from '@/models/interfaces'
 import CategoriesGroup from './categories-toggle-group'
 import { Item } from '@/models/models'
 import Image from 'next/image'
@@ -34,8 +35,15 @@ import { toast } from 'sonner'
 import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
 import React from 'react'
+import ZonesGroup from './zones-toggle-group'
 
-export default function ItemsList({ category }: { category: string }) {
+export default function ItemsList({
+  category,
+  zone,
+}: {
+  category: string
+  zone: string
+}) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<IItem>(new Item())
   const [code, setCode] = useState('')
@@ -59,21 +67,46 @@ export default function ItemsList({ category }: { category: string }) {
     mutate()
   })
 
+  // const filtered = useMemo(
+  //   () =>
+  //     (itemData?.items ?? []).filter(
+  //       (it: IItem) =>
+  //         (category === 'all' ||
+  //           (category === 'blank'
+  //             ? !it?.category
+  //             : it.category?._id?.toString() === category)) &&
+  //         (!filter.trim() ||
+  //           `${it.sku ?? ''} ${it.name ?? ''}`
+  //             .toLowerCase()
+  //             .includes(filter.trim().toLowerCase())) &&
+  //         (!noCodeFilter || !(it.code ?? '').trim())
+  //     ),
+  //   [itemData?.items, category, filter, noCodeFilter]
+  // )
+
   const filtered = useMemo(
     () =>
       (itemData?.items ?? []).filter(
         (it: IItem) =>
+          // category filter
           (category === 'all' ||
             (category === 'blank'
               ? !it?.category
               : it.category?._id?.toString() === category)) &&
+          // zone filter
+          (zone === 'all' ||
+            (zone === 'blank'
+              ? !it?.zone
+              : it.zone?._id?.toString() === zone)) &&
+          // text filter
           (!filter.trim() ||
             `${it.sku ?? ''} ${it.name ?? ''}`
               .toLowerCase()
               .includes(filter.trim().toLowerCase())) &&
+          // no-code filter
           (!noCodeFilter || !(it.code ?? '').trim())
       ),
-    [itemData?.items, category, filter, noCodeFilter]
+    [itemData?.items, category, zone, filter, noCodeFilter]
   )
 
   const handleKeyDown = async (
@@ -118,12 +151,22 @@ export default function ItemsList({ category }: { category: string }) {
     setIsDialogOpen(false)
   }
 
+  const handleZoneChange = async (zone: string) => {
+    const data = await updateItemZone(selectedItem, zone)
+    if (!data.success) {
+      toast.error(data.message)
+    } else {
+      toast.success(data.message)
+    }
+    setSelectedItem(data.data)
+    setIsDialogOpen(false)
+  }
+
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex gap-2'>
         <div className='flex items-center gap-1 w-full'>
           <Search className='w-5 h-5' strokeWidth={1} />
-
           <Input
             id='search'
             value={filter}
@@ -186,6 +229,7 @@ export default function ItemsList({ category }: { category: string }) {
               <CardFooter className='flex flex-col text-center items-center justify-center p-0 text-[8px]'>
                 <p>{item.code}</p>
                 <p>{(item.category as ICategory)?.name}</p>
+                <p>{(item.zone as IZone)?.name}</p>
               </CardFooter>
             </Card>
           )
@@ -207,10 +251,16 @@ export default function ItemsList({ category }: { category: string }) {
               />
             </div>
             <DialogFooter>
-              <CategoriesGroup
-                showAll={false}
-                handleValueChange={handleCategoryChange}
-              />
+              <div className='flex flex-col items-center gap-2'>
+                <CategoriesGroup
+                  showAll={false}
+                  handleValueChange={handleCategoryChange}
+                />
+                <ZonesGroup
+                  showAll={false}
+                  handleValueChange={handleZoneChange}
+                />
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -7,6 +7,7 @@ import {
   IIgnoreItem,
   IItem,
   IWarehouse,
+  IZone,
 } from '@/models/interfaces'
 import { IgnoreItem, Item, ItemImg } from '@/models/models'
 import { drizzle } from 'drizzle-orm/mysql2'
@@ -20,11 +21,11 @@ export async function getAllItems(warehouse: IWarehouse) {
 
   const items = await Item.find(
     { warehouse: warehouse._id },
-    // projection keeps docs small; add/remove fields as needed
-    { name: 1, sku: 1, image: 1, category: 1, warehouse: 1 }
+    { name: 1, sku: 1, image: 1, category: 1, warehouse: 1, zone: 1 }
   )
     .sort({ name: 1 })
-    .populate<{ category: ICategory }>('category', 'name _id') // select only needed fields
+    .populate<{ category: ICategory }>('category', 'name _id')
+    .populate<{ zone: IZone }>('zone', 'name _id')
     .lean<IItem[]>()
 
   return { items: JSON.parse(JSON.stringify(items as IItem[])) }
@@ -149,6 +150,38 @@ export async function updateItemCategory(item: any, category: string) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateItemZone(item: any, zone: string) {
+  try {
+    await dbConnect()
+    const updatedItem = await Item.findByIdAndUpdate(
+      item._id,
+      {
+        zone: zone,
+      },
+      {
+        new: true,
+      }
+    )
+
+    if (!updatedItem) throw new Error('Товар не найден')
+
+    return {
+      success: true,
+      message: 'Зона хранения Товара успешно обновлена',
+      data: JSON.parse(JSON.stringify(updatedItem)),
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+        typeof error.message === 'string'
+          ? error.message
+          : JSON.stringify(error.message),
+    }
+  }
+}
 export async function createItem(item: {
   name: string
   sku: string

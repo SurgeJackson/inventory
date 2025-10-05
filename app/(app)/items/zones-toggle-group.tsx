@@ -1,17 +1,18 @@
 'use client'
 import {
+  Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { getAllCategories } from '@/lib/actions/category.actions'
-import { ICategory } from '@/models/interfaces'
-import { Collapsible } from '@radix-ui/react-collapsible'
+import { getAllZones } from '@/lib/actions/zone.action'
+import { IZone } from '@/models/interfaces'
 import { ChevronsUpDown } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
-export default function CategoriesGroup({
+export default function ZonesGroup({
   showAll,
   handleValueChange,
 }: {
@@ -19,11 +20,12 @@ export default function CategoriesGroup({
   handleValueChange: (value: string) => void
 }) {
   const [value, setValue] = useState(showAll ? 'all' : '')
+  const warehouse = useSession().data?.user?.warehouse
 
-  const { data: categories } = useSWR('getAllCategories', {
+  const { data: zones } = useSWR(`getAllZones(${warehouse._id})`, {
     fetcher: async () => {
-      const res = await getAllCategories()
-      return res.categories
+      const res = await getAllZones(warehouse)
+      return res.zones
     },
     revalidateOnMount: false,
     revalidateOnFocus: false,
@@ -32,11 +34,11 @@ export default function CategoriesGroup({
   return (
     <Collapsible>
       <CollapsibleTrigger className='flex items-center gap-2 p-2'>
-        <p className='text-xs'>Категория</p>
+        <p className='text-xs'>Зона хранения</p>
         <ChevronsUpDown className='h-4 w-4' />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        {categories?.length > 0 && (
+        {zones?.length > 0 && (
           <ToggleGroup
             className='w-full flex flex-wrap gap-0.5 text-xs'
             type='single'
@@ -59,16 +61,16 @@ export default function CategoriesGroup({
                 value='blank'
                 className='min-w-[100px] border p-1 rounded-md text-xs'
               >
-                <p>Без категории</p>
+                <p className='truncate'>Без зоны хранения</p>
               </ToggleGroupItem>
             )}
-            {categories?.map((category: ICategory) => (
+            {zones?.map((zone: IZone) => (
               <ToggleGroupItem
-                key={category._id.toString()}
-                value={category._id.toString()}
+                key={zone._id.toString()}
+                value={zone._id.toString()}
                 className='min-w-[100px] border p-1 rounded-md text-xs'
               >
-                <p className='truncate'>{category.name}</p>
+                <p className='truncate'>{zone.name}</p>
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
