@@ -104,16 +104,18 @@ export function AppSidebar() {
                   <ChevronDown className='ml-auto' />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {warehouses?.map((warehouse: IWarehouse) => (
-                  <DropdownMenuItem
-                    key={warehouse._id.toString()}
-                    onClick={() => setWarehouse(warehouse)}
-                  >
-                    <span>{warehouse.name}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
+              {session?.data?.user?.isAdmin && (
+                <DropdownMenuContent>
+                  {warehouses?.map((warehouse: IWarehouse) => (
+                    <DropdownMenuItem
+                      key={warehouse._id.toString()}
+                      onClick={() => setWarehouse(warehouse)}
+                    >
+                      <span>{warehouse.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              )}
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
