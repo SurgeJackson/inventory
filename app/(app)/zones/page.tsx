@@ -51,10 +51,10 @@ export default function ZonesPage() {
   })
 
   const columns: ColumnDef<IUser>[] = [
-    {
-      accessorKey: '_id',
-      header: 'ID',
-    },
+    // {
+    //   accessorKey: '_id',
+    //   header: 'ID',
+    // },
     {
       accessorKey: 'name',
       header: 'Зона хранения',
