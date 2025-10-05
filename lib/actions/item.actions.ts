@@ -25,47 +25,47 @@ export async function getAllItems(warehouse: IWarehouse) {
 }
 
 export async function getAllItemsWithImages(warehouse: IWarehouse) {
-  const uniq = <T>(arr: T[]) => Array.from(new Set(arr))
+  // const uniq = <T>(arr: T[]) => Array.from(new Set(arr))
 
   await dbConnect()
-  const itemsNoImages = await Item.find(
-    {
-      warehouse: warehouse._id,
-      $or: [{ image: { $exists: false } }, { image: '' }],
-    },
-    { _id: 1, sku: 1 }
-  ).lean<{ _id: mongoose.Types.ObjectId; sku: string }[]>()
+  // const itemsNoImages = await Item.find(
+  //   {
+  //     warehouse: warehouse._id,
+  //     $or: [{ image: { $exists: false } }, { image: '' }],
+  //   },
+  //   { _id: 1, sku: 1 }
+  // ).lean<{ _id: mongoose.Types.ObjectId; sku: string }[]>()
 
-  if (itemsNoImages.length > 0) {
-    const skuList = uniq(itemsNoImages.map((i) => i.sku).filter(Boolean))
-    const images = await ItemImg.find(
-      { sku: { $in: skuList } },
-      { sku: 1, image: 1, _id: 0 }
-    ).lean<{ sku: string; image?: string }[]>()
+  // if (itemsNoImages.length > 0) {
+  //   const skuList = uniq(itemsNoImages.map((i) => i.sku).filter(Boolean))
+  //   const images = await ItemImg.find(
+  //     { sku: { $in: skuList } },
+  //     { sku: 1, image: 1, _id: 0 }
+  //   ).lean<{ sku: string; image?: string }[]>()
 
-    if (images.length) {
-      const imageBySku = new Map(
-        images.map(({ sku, image }) => [sku, image ?? ''])
-      )
+  //   if (images.length) {
+  //     const imageBySku = new Map(
+  //       images.map(({ sku, image }) => [sku, image ?? ''])
+  //     )
 
-      const ops = itemsNoImages
-        .map((it) => {
-          const img = imageBySku.get(it.sku)
-          if (!img) return null
-          return {
-            updateOne: {
-              filter: { _id: it._id },
-              update: { $set: { image: img } },
-            },
-          }
-        })
-        .filter(Boolean) as Parameters<typeof Item.bulkWrite>[0]
+  //     const ops = itemsNoImages
+  //       .map((it) => {
+  //         const img = imageBySku.get(it.sku)
+  //         if (!img) return null
+  //         return {
+  //           updateOne: {
+  //             filter: { _id: it._id },
+  //             update: { $set: { image: img } },
+  //           },
+  //         }
+  //       })
+  //       .filter(Boolean) as Parameters<typeof Item.bulkWrite>[0]
 
-      if (ops.length) {
-        await Item.bulkWrite(ops, { ordered: false })
-      }
-    }
-  }
+  //     if (ops.length) {
+  //       await Item.bulkWrite(ops, { ordered: false })
+  //     }
+  //   }
+  // }
 
   return await getAllItems(warehouse)
 }
@@ -150,10 +150,12 @@ export async function createItem(item: {
 }) {
   try {
     await dbConnect()
+    const itemImg = await ItemImg.findOne({ sku: item.sku })
     const createdItem = await Item.create({
       name: item.name,
       sku: item.sku,
       warehouse: item.warehouseId,
+      image: itemImg?.image ?? '',
     })
 
     if (!createdItem) throw new Error('Товар не создан')
