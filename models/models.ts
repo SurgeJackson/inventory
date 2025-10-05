@@ -2,6 +2,7 @@ import { model, models } from 'mongoose'
 import { ICategory, IItem, IUser, IWarehouse } from './interfaces'
 import {
   categorySchema,
+  ignoreItemSchema,
   itemImgSchema,
   itemSchema,
   userSchema,
@@ -19,3 +20,6 @@ export const Warehouse =
 export const User = models?.User || model<IUser>('User', userSchema)
 
 export const ItemImg = models?.ItemImg || model('ItemImg', itemImgSchema)
+
+export const IgnoreItem =
+  models?.IgnoreItem || model('IgnoreItem', ignoreItemSchema)

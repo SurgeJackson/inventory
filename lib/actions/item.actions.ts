@@ -1,8 +1,14 @@
 'use server'
 import { ocProduct } from '@/drizzle/schema'
 import dbConnect from '@/lib/dbConnect'
-import { FlatItem, ICategory, IItem, IWarehouse } from '@/models/interfaces'
-import { Item, ItemImg } from '@/models/models'
+import {
+  FlatItem,
+  ICategory,
+  IIgnoreItem,
+  IItem,
+  IWarehouse,
+} from '@/models/interfaces'
+import { IgnoreItem, Item, ItemImg } from '@/models/models'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { get1cItems } from './1c.actions'
 import { Types } from 'mongoose'
@@ -261,55 +267,154 @@ export async function createItem(item: {
 //   }
 // }
 
+// export async function compareItems(warehouse: IWarehouse) {
+//   if (!warehouse?.id1c) return { items: [] as FlatItem[] }
+
+//   // 1) 1C items → normalize
+//   const items1C = await get1cItems(warehouse.id1c)
+
+//   const items1: FlatItem[] = (items1C?.value ?? [])
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     .map((it: any) => ({
+//       sku: String(it?.['Номенклатура']?.['Артикул'] ?? '').trim(),
+//       name: String(it?.['Номенклатура']?.['Description'] ?? '').trim(),
+//       qty: Number(it?.['ВНаличииBalance'] ?? 0),
+//     }))
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     .filter((x: any) => x.sku) // keep only valid SKUs
+
+//   // 2) Mongo items → aggregate per SKU
+//   await dbConnect()
+//   const items2 = await Item.aggregate<FlatItem>([
+//     { $match: { warehouse: new Types.ObjectId(String(warehouse._id)) } },
+//     {
+//       $group: {
+//         _id: { sku: '$sku', name: '$name' },
+//         qty: { $sum: 1 }, // keep as in original logic (count docs per SKU)
+//       },
+//     },
+//     {
+//       $project: {
+//         _id: 0,
+//         sku: '$_id.sku',
+//         name: '$_id.name',
+//         qty: '$qty',
+//       },
+//     },
+//   ])
+
+//   const ignoreItems = await IgnoreItem.aggregate<FlatItem>([
+//     { $match: { warehouse: new Types.ObjectId(String(warehouse._id)) } },
+//     {
+//       $group: {
+//         _id: { sku: '$sku' },
+//       },
+//     },
+//     {
+//       $project: {
+//         _id: 0,
+//         sku: '$_id.sku',
+//       },
+//     },
+//   ])
+
+//   // 3) Build quick lookups
+//   const m1 = new Map(items1.map((x) => [x.sku, x]))
+//   const m2 = new Map(items2.map((x) => [x.sku, x]))
+//   const m3 = new Map(ignoreItems.map((x) => [x.sku, x]))
+
+//   // 4) Union of all SKUs, compute differences
+//   const allSkus = new Set<string>([...m1.keys(), ...m2.keys()])
+//   const differences: FlatItem[] = []
+
+//   for (const sku of allSkus) {
+//     const a = m1.get(sku)
+//     const b = m2.get(sku)
+//     const qty1 = a?.qty ?? 0
+//     const qty2 = b?.qty ?? 0
+//     const delta = qty1 - qty2
+//     if (delta !== 0) {
+//       differences.push({
+//         sku,
+//         name: (a?.name ?? b?.name ?? '').trim(),
+//         qty: delta,
+//       })
+//     }
+//   }
+
+//   // 5) Remove ignored SKUs
+//   const differences2 = differences.filter((x) => !m3.has(x.sku))
+
+//   return { items: differences2 }
+// }
+
 export async function compareItems(warehouse: IWarehouse) {
   if (!warehouse?.id1c) return { items: [] as FlatItem[] }
 
-  // 1) 1C items → normalize
+  // 1) 1C → normalize then aggregate by SKU
   const items1C = await get1cItems(warehouse.id1c)
-  const items1: FlatItem[] = (items1C?.value ?? [])
+  const items1Raw: FlatItem[] = (items1C?.value ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((it: any) => ({
+    .map((it: Record<string, any>) => ({
       sku: String(it?.['Номенклатура']?.['Артикул'] ?? '').trim(),
       name: String(it?.['Номенклатура']?.['Description'] ?? '').trim(),
       qty: Number(it?.['ВНаличииBalance'] ?? 0),
     }))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((x: any) => x.sku) // keep only valid SKUs
+    .filter((x: { sku: string }) => !!x.sku)
 
-  // 2) Mongo items → aggregate per SKU
+  // aggregate same SKU (sum quantities, keep first non-empty name)
+  const bySku1 = new Map<string, FlatItem>()
+  for (const r of items1Raw) {
+    const prev = bySku1.get(r.sku)
+    if (!prev) bySku1.set(r.sku, r)
+    else
+      bySku1.set(r.sku, {
+        sku: r.sku,
+        name: prev.name || r.name,
+        qty: prev.qty + r.qty,
+      })
+  }
+
+  // 2) Mongo queries (parallel)
   await dbConnect()
-  const items2 = await Item.aggregate<FlatItem>([
-    { $match: { warehouse: new Types.ObjectId(String(warehouse._id)) } },
-    {
-      $group: {
-        _id: { sku: '$sku', name: '$name' },
-        qty: { $sum: 1 }, // keep as in original logic (count docs per SKU)
+  const wid = new Types.ObjectId(String(warehouse._id))
+
+  const [items2, ignoreRows] = await Promise.all([
+    Item.aggregate<FlatItem>([
+      { $match: { warehouse: wid } },
+      {
+        $group: {
+          _id: { sku: '$sku', name: '$name' },
+          qty: { $sum: 1 },
+        },
       },
-    },
-    {
-      $project: {
-        _id: 0,
-        sku: '$_id.sku',
-        name: '$_id.name',
-        qty: '$qty',
-      },
-    },
+      { $project: { _id: 0, sku: '$_id.sku', name: '$_id.name', qty: '$qty' } },
+    ]),
+    IgnoreItem.aggregate<{ sku: string }>([
+      { $match: { warehouse: wid } },
+      { $group: { _id: { sku: '$sku' } } },
+      { $project: { _id: 0, sku: '$_id.sku' } },
+    ]),
   ])
 
-  // 3) Build quick lookups
-  const m1 = new Map(items1.map((x) => [x.sku, x]))
-  const m2 = new Map(items2.map((x) => [x.sku, x]))
+  const bySku2 = new Map(items2.map((x) => [x.sku, x] as const))
+  const ignored = new Set(ignoreRows.map((x) => x.sku))
 
-  // 4) Union of all SKUs, compute differences
-  const allSkus = new Set<string>([...m1.keys(), ...m2.keys()])
+  if (bySku1.size === 0 && bySku2.size === 0) return { items: [] as FlatItem[] }
+
+  // 3) Union SKUs, compute deltas, drop ignored
+  const allSkus = new Set<string>([...bySku1.keys(), ...bySku2.keys()])
   const differences: FlatItem[] = []
 
   for (const sku of allSkus) {
-    const a = m1.get(sku)
-    const b = m2.get(sku)
+    if (ignored.has(sku)) continue
+
+    const a = bySku1.get(sku)
+    const b = bySku2.get(sku)
     const qty1 = a?.qty ?? 0
     const qty2 = b?.qty ?? 0
     const delta = qty1 - qty2
+
     if (delta !== 0) {
       differences.push({
         sku,
@@ -364,4 +469,70 @@ export async function copyImages() {
   }
   await upsertImageUrls(images)
   console.log('Image URLs copied to Mongo.')
+}
+
+export async function getAllIgnoreItems(warehouse: IWarehouse) {
+  await dbConnect()
+
+  const IgnoreItems = await IgnoreItem.find(
+    { warehouse: warehouse._id },
+    // projection keeps docs small; add/remove fields as needed
+    { sku: 1, warehouse: 1 }
+  )
+    .sort({ sku: 1 })
+    .populate<{ warehouse: IWarehouse }>('warehouse', 'name _id') // select only needed fields
+    .lean<IIgnoreItem[]>()
+
+  return { items: JSON.parse(JSON.stringify(IgnoreItems as IIgnoreItem[])) }
+}
+
+export async function createIgnoreItem(item: {
+  sku: string
+  warehouseId: string
+}) {
+  try {
+    await dbConnect()
+    console.log('item', item)
+    const createdItem = await IgnoreItem.create({
+      sku: item.sku,
+      warehouse: item.warehouseId,
+    })
+    if (!createdItem) throw new Error('Товар не создан')
+
+    return {
+      success: true,
+      message: 'Товар создан успешно',
+      data: JSON.parse(JSON.stringify(createdItem)),
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+        typeof error.message === 'string'
+          ? error.message
+          : JSON.stringify(error.message),
+    }
+  }
+}
+
+export async function deleteIgnoreItem(ignoreItemId: string) {
+  try {
+    await dbConnect()
+    await IgnoreItem.deleteOne({ _id: ignoreItemId })
+
+    return {
+      success: true,
+      message: 'Товар удален успешно',
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+        typeof error.message === 'string'
+          ? error.message
+          : JSON.stringify(error.message),
+    }
+  }
 }

@@ -1,5 +1,6 @@
 'use client'
 import {
+  Ban,
   Boxes,
   ChartBarStacked,
   ChevronDown,
@@ -70,6 +71,12 @@ const items = [
     title: 'Пользователи',
     url: 'users',
     icon: User,
+    isAdmin: true,
+  },
+  {
+    title: 'Неучитываемые товары',
+    url: 'ignore-items',
+    icon: Ban,
     isAdmin: true,
   },
 ]

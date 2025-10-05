@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose'
-import { ICategory, IItem, IUser, IWarehouse } from './interfaces'
+import { ICategory, IIgnoreItem, IItem, IUser, IWarehouse } from './interfaces'
 
 export const categorySchema = new Schema<ICategory>(
   {
@@ -58,3 +58,14 @@ export const itemImgSchema = new Schema({
   image: String, // URL or relative path
   imageCopiedAt: Date, // bookkeeping
 })
+
+export const ignoreItemSchema = new Schema<IIgnoreItem>(
+  {
+    sku: { type: String, required: true },
+    warehouse: {
+      type: Schema.Types.ObjectId,
+      ref: 'Warehouse',
+    },
+  },
+  { timestamps: true }
+)

@@ -8,7 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { compareItems, createItem } from '@/lib/actions/item.actions'
+import {
+  compareItems,
+  createIgnoreItem,
+  createItem,
+} from '@/lib/actions/item.actions'
 import { useSession } from 'next-auth/react'
 import { Key, useEffect } from 'react'
 import { toast } from 'sonner'
@@ -16,6 +20,7 @@ import useSWR from 'swr'
 
 export default function DemoPage() {
   const warehouse = useSession().data?.user?.warehouse
+  const user = useSession().data?.user
 
   const { data, mutate } = useSWR(`compareItems(${warehouse._id})`, {
     fetcher: async () => {
@@ -51,22 +56,42 @@ export default function DemoPage() {
             </CardContent>
             <CardFooter className='flex flex-col gap-2'>
               {item.qty > 0 ? (
-                <Button
-                  className='cursor-pointer w-full text-xs'
-                  onClick={() => {
-                    createItem({
-                      ...item,
-                      warehouseId: warehouse._id.toString(),
-                    }).then((res) =>
-                      res.success
-                        ? toast.success(res.message)
-                        : toast.error(res.message)
-                    )
-                    mutate()
-                  }}
-                >
-                  Принять на склад
-                </Button>
+                <div className='flex flex-col gap-2'>
+                  <Button
+                    className='cursor-pointer w-full text-xs'
+                    onClick={() => {
+                      createItem({
+                        ...item,
+                        warehouseId: warehouse._id.toString(),
+                      }).then((res) =>
+                        res.success
+                          ? toast.success(res.message)
+                          : toast.error(res.message)
+                      )
+                      mutate()
+                    }}
+                  >
+                    Принять на склад
+                  </Button>
+                  {user?.isAdmin && (
+                    <Button
+                      className='cursor-pointer w-full text-xs'
+                      onClick={() => {
+                        createIgnoreItem({
+                          ...item,
+                          warehouseId: warehouse._id,
+                        }).then((res) =>
+                          res.success
+                            ? toast.success(res.message)
+                            : toast.error(res.message)
+                        )
+                        mutate()
+                      }}
+                    >
+                      Не учитывать
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <Button className='cursor-pointer w-full'>
                   Списать со склада
