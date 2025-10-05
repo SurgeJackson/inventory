@@ -122,7 +122,7 @@ export async function updateItemCategory(item: any, category: string) {
     const updatedItems = await Item.updateMany(
       { sku: item.sku, warehouse: item.warehouse },
       { $set: { category: category } }
-    ) // update all items with the same category
+    ) // update all items with the same SKU and warehouse
 
     if (!updatedItems) throw new Error('Товар не найден')
 
