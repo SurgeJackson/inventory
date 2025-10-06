@@ -72,7 +72,7 @@ export default function DemoPage() {
     }).then((res) =>
       res.success ? toast.success(res.message) : toast.error(res.message)
     )
-    await mutateDiffs()
+    await Promise.all([mutateItems(), mutateDiffs()])
   }
 
   const handleIgnore = async (sku: string) => {
