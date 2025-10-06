@@ -31,6 +31,21 @@ export async function getAllItems(warehouse: IWarehouse) {
   return { items: JSON.parse(JSON.stringify(items as IItem[])) }
 }
 
+export async function getAllItemsBySKU(warehouse: IWarehouse, sku: string) {
+  await dbConnect()
+
+  const items = await Item.find(
+    { warehouse: warehouse._id, sku: sku },
+    { name: 1, sku: 1, image: 1, category: 1, warehouse: 1, zone: 1, code: 1 }
+  )
+    .sort({ name: 1 })
+    .populate<{ category: ICategory }>('category', 'name _id')
+    .populate<{ zone: IZone }>('zone', 'name _id')
+    .lean<IItem[]>()
+
+  return { items: JSON.parse(JSON.stringify(items as IItem[])) }
+}
+
 export async function getAllItemsWithImages(warehouse: IWarehouse) {
   // const uniq = <T>(arr: T[]) => Array.from(new Set(arr))
 
@@ -553,6 +568,27 @@ export async function deleteIgnoreItem(ignoreItemId: string) {
   try {
     await dbConnect()
     await IgnoreItem.deleteOne({ _id: ignoreItemId })
+
+    return {
+      success: true,
+      message: 'Товар удален успешно',
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+        typeof error.message === 'string'
+          ? error.message
+          : JSON.stringify(error.message),
+    }
+  }
+}
+
+export async function deleteItem(itemId: string) {
+  try {
+    await dbConnect()
+    await Item.deleteOne({ _id: itemId })
 
     return {
       success: true,
