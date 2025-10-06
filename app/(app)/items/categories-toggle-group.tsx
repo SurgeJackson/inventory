@@ -14,11 +14,15 @@ import useSWR from 'swr'
 export default function CategoriesGroup({
   showAll,
   handleValueChange,
+  defaultValue,
 }: {
   showAll: boolean
   handleValueChange: (value: string) => void
+  defaultValue: string
 }) {
-  const [value, setValue] = useState(showAll ? 'all' : '')
+  const [value, setValue] = useState(
+    showAll ? 'all' : defaultValue ? defaultValue : ''
+  )
 
   const { data: categories } = useSWR('getAllCategories', {
     fetcher: async () => {
@@ -30,9 +34,9 @@ export default function CategoriesGroup({
   })
 
   return (
-    <Collapsible>
-      <CollapsibleTrigger className='flex items-center gap-2 p-2'>
-        <p className='text-xs'>Категория</p>
+    <Collapsible className='w-full border rounded-md p-1'>
+      <CollapsibleTrigger className='flex items-center gap-2 p-2 cursor-pointer w-full'>
+        <p className='text-xs w-full'>Категория</p>
         <ChevronsUpDown className='h-4 w-4' />
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -41,9 +45,11 @@ export default function CategoriesGroup({
             className='w-full flex flex-wrap gap-0.5 text-xs'
             type='single'
             value={value}
-            onValueChange={(value) => {
-              if (value) setValue(value)
-              handleValueChange(value)
+            onValueChange={(newValue) => {
+              if (newValue) {
+                setValue(newValue)
+                handleValueChange(newValue)
+              } else handleValueChange(value)
             }}
           >
             {showAll && (

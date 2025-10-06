@@ -9,10 +9,17 @@ export default function Items() {
   const [zone, setZone] = useState('all')
 
   return (
-    <div className='w-full grid grid-cols-1 gap-2 px-4'>
-      <CategoriesGroup showAll={true} handleValueChange={setCategory} />
-      <ZonesGroup showAll={true} handleValueChange={setZone} />
-
+    <div className='w-full grid grid-cols-1 gap-1 px-4'>
+      <CategoriesGroup
+        showAll={true}
+        handleValueChange={setCategory}
+        defaultValue={''}
+      />
+      <ZonesGroup
+        showAll={true}
+        handleValueChange={setZone}
+        defaultValue={''}
+      />
       <ItemsList category={category} zone={zone} />
     </div>
   )

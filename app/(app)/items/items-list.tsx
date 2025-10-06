@@ -274,14 +274,18 @@ export default function ItemsList({
               />
             </div>
             <DialogFooter>
-              <div className='flex flex-col items-center gap-2'>
+              <div className='flex flex-col items-center gap-2 w-full'>
                 <CategoriesGroup
                   showAll={false}
                   handleValueChange={handleCategoryChange}
+                  defaultValue={(
+                    selectedItem?.category as ICategory
+                  )?._id.toString()}
                 />
                 <ZonesGroup
                   showAll={false}
                   handleValueChange={handleZoneChange}
+                  defaultValue={(selectedItem?.zone as IZone)?._id.toString()}
                 />
               </div>
             </DialogFooter>

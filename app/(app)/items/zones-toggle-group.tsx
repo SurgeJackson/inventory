@@ -15,11 +15,15 @@ import useSWR from 'swr'
 export default function ZonesGroup({
   showAll,
   handleValueChange,
+  defaultValue,
 }: {
   showAll: boolean
   handleValueChange: (value: string) => void
+  defaultValue: string
 }) {
-  const [value, setValue] = useState(showAll ? 'all' : '')
+  const [value, setValue] = useState(
+    showAll ? 'all' : defaultValue ? defaultValue : ''
+  )
   const warehouse = useSession().data?.user?.warehouse
 
   const { data: zones } = useSWR(`getAllZones(${warehouse._id})`, {
@@ -32,9 +36,9 @@ export default function ZonesGroup({
   })
 
   return (
-    <Collapsible>
-      <CollapsibleTrigger className='flex items-center gap-2 p-2'>
-        <p className='text-xs'>Зона хранения</p>
+    <Collapsible className='w-full border rounded-md p-1'>
+      <CollapsibleTrigger className='flex items-center gap-2 p-2 cursor-pointer w-full'>
+        <p className='text-xs w-full'>Зона хранения</p>
         <ChevronsUpDown className='h-4 w-4' />
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -43,9 +47,11 @@ export default function ZonesGroup({
             className='w-full flex flex-wrap gap-0.5 text-xs'
             type='single'
             value={value}
-            onValueChange={(value) => {
-              if (value) setValue(value)
-              handleValueChange(value)
+            onValueChange={(newValue) => {
+              if (newValue) {
+                setValue(newValue)
+                handleValueChange(newValue)
+              } else handleValueChange(value)
             }}
           >
             {showAll && (
