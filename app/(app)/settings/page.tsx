@@ -15,7 +15,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -181,18 +180,18 @@ export default function DemoPage() {
           <DialogContent className='sm:max-w-md'>
             <DialogHeader>
               <DialogTitle>{selectedItemSKU || '—'}</DialogTitle>
-              <DialogDescription>{selectedItemSKU}</DialogDescription>
             </DialogHeader>
-
             <div className='grid grid-cols-3 gap-1 text-xs'>
               {items?.map((it: IItem) => (
                 <Card
-                  className='cursor-pointer'
+                  className='cursor-pointer p-2'
                   key={String(it._id)}
                   onClick={() => handleDeleteItem(String(it._id))}
                 >
-                  <CardHeader>
-                    <CardTitle className='text-center'>{it.sku}</CardTitle>
+                  <CardHeader className='p-0'>
+                    <CardTitle className='text-center text-xs truncate'>
+                      {it.sku}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className='flex flex-col gap-2 items-center justify-center p-0'>
                     <CardDescription className='flex flex-col gap-1 text-center text-xs'>
