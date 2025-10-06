@@ -21,7 +21,7 @@ export async function getAllItems(warehouse: IWarehouse) {
 
   const items = await Item.find(
     { warehouse: warehouse._id },
-    { name: 1, sku: 1, image: 1, category: 1, warehouse: 1, zone: 1 }
+    { name: 1, sku: 1, image: 1, category: 1, warehouse: 1, zone: 1, code: 1 }
   )
     .sort({ name: 1 })
     .populate<{ category: ICategory }>('category', 'name _id')

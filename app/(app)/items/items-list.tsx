@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { CircleCheckBig, CircleX, Search } from 'lucide-react'
+import { CircleCheckBig, CircleX, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import {
   getAllItemsWithImages,
@@ -36,6 +36,7 @@ import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
 import React from 'react'
 import ZonesGroup from './zones-toggle-group'
+import { Button } from '@/components/ui/button'
 
 export default function ItemsList({
   category,
@@ -50,6 +51,7 @@ export default function ItemsList({
   const [filter, setFilter] = useState('')
   const [noCodeFilter, setNoCodeFilter] = useState(false)
   const warehouse = useSession().data?.user?.warehouse
+  const [filterCode, setFilterCode] = useState('')
 
   const { data: itemData, mutate } = useSWR(
     `getAllItemsWithImages(${warehouse._id})`,
@@ -67,23 +69,6 @@ export default function ItemsList({
     mutate()
   })
 
-  // const filtered = useMemo(
-  //   () =>
-  //     (itemData?.items ?? []).filter(
-  //       (it: IItem) =>
-  //         (category === 'all' ||
-  //           (category === 'blank'
-  //             ? !it?.category
-  //             : it.category?._id?.toString() === category)) &&
-  //         (!filter.trim() ||
-  //           `${it.sku ?? ''} ${it.name ?? ''}`
-  //             .toLowerCase()
-  //             .includes(filter.trim().toLowerCase())) &&
-  //         (!noCodeFilter || !(it.code ?? '').trim())
-  //     ),
-  //   [itemData?.items, category, filter, noCodeFilter]
-  // )
-
   const filtered = useMemo(
     () =>
       (itemData?.items ?? []).filter(
@@ -100,13 +85,19 @@ export default function ItemsList({
               : it.zone?._id?.toString() === zone)) &&
           // text filter
           (!filter.trim() ||
-            `${it.sku ?? ''} ${it.name ?? ''}`
+            (!filterCode.trim() &&
+              `${it.sku ?? ''} ${it.name ?? ''}`
+                .toLowerCase()
+                .includes(filter.trim().toLowerCase()))) &&
+          // code filter
+          (!filterCode.trim() ||
+            `${it.code ?? ''}`
               .toLowerCase()
-              .includes(filter.trim().toLowerCase())) &&
+              .includes(filterCode.trim().toLowerCase())) &&
           // no-code filter
           (!noCodeFilter || !(it.code ?? '').trim())
       ),
-    [itemData?.items, category, zone, filter, noCodeFilter]
+    [itemData?.items, category, zone, filter, noCodeFilter, filterCode]
   )
 
   const handleKeyDown = async (
@@ -133,6 +124,24 @@ export default function ItemsList({
       setSelectedItem(data.data)
       setIsDialogOpen(false)
       setCode('')
+    }
+  }
+
+  const handleFilterKeyDown = async (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+      if (!uuidRegex.test(filter)) {
+        setFilterCode('')
+        toast.error('Некорректный QR-код')
+        return
+      }
+      setFilterCode(filter)
+      setFilter('')
     }
   }
 
@@ -170,10 +179,24 @@ export default function ItemsList({
           <Input
             id='search'
             value={filter}
+            onKeyDown={handleFilterKeyDown}
             onChange={(e) => {
+              setFilterCode('')
               setFilter(e.target.value)
             }}
           />
+          {(filter || filterCode) && (
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={() => {
+                setFilter('')
+                setFilterCode('')
+              }}
+            >
+              <X className='w-5 h-5' strokeWidth={1} />
+            </Button>
+          )}
         </div>
         <div className='flex items-center gap-1'>
           <Switch
