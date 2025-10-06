@@ -65,7 +65,7 @@ export const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: false },
     warehouse: {
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',
