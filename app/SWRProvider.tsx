@@ -5,10 +5,7 @@ import { getAllCategories } from '@/lib/actions/category.actions'
 import { getAllWarehouses } from '@/lib/actions/warehouse.action'
 import { getAllUsers } from '@/lib/actions/user.action'
 import { getAllZones } from '@/lib/actions/zone.action'
-import {
-  getAllIgnoreItems,
-  getAllItemsWithImages,
-} from '@/lib/actions/item.actions'
+import { getAllIgnoreItems, getAllItems } from '@/lib/actions/item.actions'
 
 export default async function SWRProvider({
   children,
@@ -30,7 +27,7 @@ export default async function SWRProvider({
   const [zonesRes, itemsWithImagesRes, ignoreItemsRes] = warehouse
     ? await Promise.all([
         getAllZones(warehouse),
-        getAllItemsWithImages(warehouse),
+        getAllItems(warehouse),
         getAllIgnoreItems(warehouse),
       ])
     : [{ zones: [] }, { items: [] }, { items: [] }]
@@ -44,7 +41,7 @@ export default async function SWRProvider({
     // warehouse-scoped (keep exact keys you used on the client)
     ...(warehouseId && {
       [`getAllZones(${warehouseId})`]: zonesRes.zones,
-      [`getAllItemsWithImages(${warehouseId})`]: itemsWithImagesRes,
+      [`getAllItems(${warehouseId})`]: itemsWithImagesRes,
       [`getAllIgnoreItems(${warehouseId})`]: ignoreItemsRes.items,
     }),
   }

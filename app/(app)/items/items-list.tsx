@@ -28,7 +28,7 @@ import { Switch } from '@/components/ui/switch'
 import { CircleCheckBig, CircleX, Search, X } from 'lucide-react'
 
 import {
-  getAllItemsWithImages,
+  getAllItems,
   updateItemCategory,
   updateItemCode,
   updateItemZone,
@@ -56,10 +56,10 @@ export default function ItemsList({ category, zone }: Props) {
   const [filterCode, setFilterCode] = useState('')
   const [noCodeFilter, setNoCodeFilter] = useState(false)
 
-  const key = warehouseId ? `getAllItemsWithImages(${warehouseId})` : null
+  const key = warehouseId ? `getAllItems(${warehouseId})` : null
   const { data: itemData, mutate } = useSWR(
     key,
-    async () => await getAllItemsWithImages(warehouse as IWarehouse),
+    async () => await getAllItems(warehouse as IWarehouse),
     { revalidateOnMount: false, revalidateOnFocus: false }
   )
 
@@ -106,13 +106,15 @@ export default function ItemsList({ category, zone }: Props) {
         toast.error('Некорректный QR-код')
         return
       }
-      const res = await updateItemCode(selectedItem, code)
+      const res = await updateItemCode(
+        selectedItem as unknown as { _id: string },
+        code
+      )
       if (!res.success) {
         toast.error(res.message)
       } else {
         toast.success(res.message)
       }
-      setSelectedItem(res.data)
       setIsDialogOpen(false)
       mutate()
     },
@@ -120,13 +122,15 @@ export default function ItemsList({ category, zone }: Props) {
   )
 
   const handleQRDelete = useCallback(async () => {
-    const res = await updateItemCode(selectedItem, '')
+    const res = await updateItemCode(
+      selectedItem as unknown as { _id: string },
+      ''
+    )
     if (!res.success) {
       toast.error(res.message)
     } else {
       toast.success(res.message)
     }
-    setSelectedItem(res.data)
     setIsDialogOpen(false)
     mutate()
   }, [mutate, selectedItem])
@@ -157,13 +161,15 @@ export default function ItemsList({ category, zone }: Props) {
 
   const handleCategoryChange = useCallback(
     async (catId: string) => {
-      const res = await updateItemCategory(selectedItem, catId)
+      const res = await updateItemCategory(
+        selectedItem as unknown as { sku: string; warehouse: string },
+        catId
+      )
       if (!res.success) {
         toast.error(res.message)
       } else {
         toast.success(res.message)
       }
-      setSelectedItem(res.data)
       setIsDialogOpen(false)
       mutate()
     },
@@ -172,13 +178,15 @@ export default function ItemsList({ category, zone }: Props) {
 
   const handleZoneChange = useCallback(
     async (zoneId: string) => {
-      const res = await updateItemZone(selectedItem, zoneId)
+      const res = await updateItemZone(
+        selectedItem as unknown as { _id: string },
+        zoneId
+      )
       if (!res.success) {
         toast.error(res.message)
       } else {
         toast.success(res.message)
       }
-      setSelectedItem(res.data)
       setIsDialogOpen(false)
       mutate()
     },

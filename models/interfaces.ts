@@ -20,6 +20,7 @@ export interface IItem extends Document {
   category: Types.ObjectId | ICategory
   warehouse: Types.ObjectId | IWarehouse
   zone: Types.ObjectId | IZone
+  deleted: boolean
 }
 
 export interface IWarehouse extends Document {

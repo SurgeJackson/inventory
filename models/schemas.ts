@@ -47,6 +47,7 @@ export const itemSchema = new Schema<IItem>(
       ref: 'Zone',
       // required: true,
     },
+    deleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 )
