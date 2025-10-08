@@ -1,13 +1,14 @@
-import { getAllCategories } from '@/lib/actions/category.actions'
 import SWRConsumer from './SWRConsumer'
+
+import { auth } from './api/auth/[...nextauth]/auth'
+import { getAllCategories } from '@/lib/actions/category.actions'
 import { getAllWarehouses } from '@/lib/actions/warehouse.action'
 import { getAllUsers } from '@/lib/actions/user.action'
+import { getAllZones } from '@/lib/actions/zone.action'
 import {
   getAllIgnoreItems,
   getAllItemsWithImages,
 } from '@/lib/actions/item.actions'
-import { auth } from './api/auth/[...nextauth]/auth'
-import { getAllZones } from '@/lib/actions/zone.action'
 
 export default async function SWRProvider({
   children,
@@ -15,22 +16,37 @@ export default async function SWRProvider({
   children: React.ReactNode
 }) {
   const session = await auth()
+  const warehouse = session?.user?.warehouse
+  const warehouseId = warehouse?._id?.toString()
+
+  // Fetch globals in parallel
+  const [catsRes, whsRes, usersRes] = await Promise.all([
+    getAllCategories(),
+    getAllWarehouses(),
+    getAllUsers(),
+  ])
+
+  // Fetch warehouse-scoped data in parallel (or provide fallbacks)
+  const [zonesRes, itemsWithImagesRes, ignoreItemsRes] = warehouse
+    ? await Promise.all([
+        getAllZones(warehouse),
+        getAllItemsWithImages(warehouse),
+        getAllIgnoreItems(warehouse),
+      ])
+    : [{ zones: [] }, { items: [] }, { items: [] }]
 
   const initialData = {
-    ['getAllCategories']: (await getAllCategories()).categories,
-    ['getAllWarehouses']: (await getAllWarehouses()).warehouses,
-    ['getAllUsers']: (await getAllUsers()).users,
-    [`getAllZones(${session?.user.warehouse._id})`]: (
-      await getAllZones(session?.user.warehouse)
-    ).zones,
-    [`getAllItemsWithImages(${session?.user.warehouse._id})`]:
-      await getAllItemsWithImages(session?.user.warehouse),
-    [`getAllIgnoreItems(${session?.user.warehouse._id})`]: (
-      await getAllIgnoreItems(session?.user.warehouse)
-    ).items,
-    // [`compareItems(${session?.user.warehouse._id})`]: (
-    //   await compareItems(session?.user.warehouse)
-    // ).items,
+    // global
+    getAllCategories: catsRes.categories,
+    getAllWarehouses: whsRes.warehouses,
+    getAllUsers: usersRes.users,
+
+    // warehouse-scoped (keep exact keys you used on the client)
+    ...(warehouseId && {
+      [`getAllZones(${warehouseId})`]: zonesRes.zones,
+      [`getAllItemsWithImages(${warehouseId})`]: itemsWithImagesRes,
+      [`getAllIgnoreItems(${warehouseId})`]: ignoreItemsRes.items,
+    }),
   }
 
   return <SWRConsumer initialData={initialData}>{children}</SWRConsumer>
