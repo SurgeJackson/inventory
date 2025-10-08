@@ -96,9 +96,10 @@ export async function getAllItemsWithImages(warehouse: IWarehouse) {
 export async function updateItemCode(item: any, code: string) {
   try {
     await dbConnect()
-    const existingItem = await Item.findOne({ code: code })
-    if (existingItem) throw new Error('QR-код уже используется')
-
+    if (code) {
+      const existingItem = await Item.findOne({ code: code })
+      if (existingItem) throw new Error('QR-код уже используется')
+    }
     const updatedItem = await Item.findByIdAndUpdate(
       item._id,
       {

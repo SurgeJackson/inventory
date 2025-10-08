@@ -119,6 +119,18 @@ export default function ItemsList({ category, zone }: Props) {
     [mutate, selectedItem]
   )
 
+  const handleQRDelete = useCallback(async () => {
+    const res = await updateItemCode(selectedItem, '')
+    if (!res.success) {
+      toast.error(res.message)
+    } else {
+      toast.success(res.message)
+    }
+    setSelectedItem(res.data)
+    setIsDialogOpen(false)
+    mutate()
+  }, [mutate, selectedItem])
+
   const handleEnterInInput = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== 'Enter') return
@@ -193,7 +205,7 @@ export default function ItemsList({ category, zone }: Props) {
               setFilterCode('')
               setFilter(e.target.value)
             }}
-            placeholder='Поиск по артикулу / названию или вставьте QR'
+            placeholder='Поиск по артикулу/названию или QR'
           />
           {(filter || filterCode) && (
             <Button
@@ -278,41 +290,51 @@ export default function ItemsList({ category, zone }: Props) {
           )
         })}
       </div>
+      {isDialogOpen && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>{selectedItem?.sku}</DialogTitle>
+              <DialogDescription>{selectedItem?.name}</DialogDescription>
+            </DialogHeader>
 
-      {/* Диалог */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className='sm:max-w-md'>
-          <DialogHeader>
-            <DialogTitle>{selectedItem?.sku}</DialogTitle>
-            <DialogDescription>{selectedItem?.name}</DialogDescription>
-          </DialogHeader>
-
-          <div className='flex items-center gap-2'>
-            <Input
-              placeholder='Отсканируйте QR'
-              onKeyDown={handleEnterInInput}
-              defaultValue=''
-            />
-          </div>
-
-          <DialogFooter>
-            <div className='flex flex-col items-center gap-2 w-full'>
-              <CategoriesGroup
-                showAll={false}
-                handleValueChange={handleCategoryChange}
-                defaultValue={(
-                  selectedItem?.category as ICategory
-                )?._id?.toString()}
-              />
-              <ZonesGroup
-                showAll={false}
-                handleValueChange={handleZoneChange}
-                defaultValue={(selectedItem?.zone as IZone)?._id?.toString()}
-              />
+            <div className='flex items-center gap-2'>
+              {selectedItem?.code ? (
+                <div className='flex items-center justify-around gap-2'>
+                  <Label htmlFor='qr-value'>{selectedItem.code}</Label>
+                  <Button size='sm' variant='outline' onClick={handleQRDelete}>
+                    <X className='w-5 h-5' strokeWidth={1} />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  id='qr-input'
+                  placeholder='Отсканируйте QR'
+                  onKeyDown={handleEnterInInput}
+                  defaultValue=''
+                />
+              )}
             </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+            <DialogFooter>
+              <div className='flex flex-col items-center gap-2 w-full'>
+                <CategoriesGroup
+                  showAll={false}
+                  handleValueChange={handleCategoryChange}
+                  defaultValue={(
+                    selectedItem?.category as ICategory
+                  )?._id?.toString()}
+                />
+                <ZonesGroup
+                  showAll={false}
+                  handleValueChange={handleZoneChange}
+                  defaultValue={(selectedItem?.zone as IZone)?._id?.toString()}
+                />
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
