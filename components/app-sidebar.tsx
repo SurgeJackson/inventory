@@ -35,6 +35,7 @@ import { IWarehouse } from '@/models/interfaces'
 import { signOut, useSession } from 'next-auth/react'
 import { getAllWarehouses } from '@/lib/actions/warehouse.action'
 import useSWR from 'swr'
+import { compareItems, getItemsCodeQty } from '@/lib/actions/item.actions'
 
 // Menu items.
 const items = [
@@ -90,6 +91,9 @@ const items = [
 
 export function AppSidebar() {
   const session = useSession()
+  const user = session?.data?.user
+  const warehouse = user?.warehouse as IWarehouse
+  const warehouseId = warehouse?._id?.toString()
 
   async function setWarehouse(warehouse: IWarehouse) {
     await session.update({
@@ -105,6 +109,24 @@ export function AppSidebar() {
     },
   })
 
+  const { data: itemsQty } = useSWR(`getItemsCodeQty(${warehouseId})`, {
+    fetcher: async () => {
+      const res = await getItemsCodeQty(warehouse)
+      return res.items
+    },
+    revalidateOnMount: false,
+    revalidateOnFocus: false,
+  })
+
+  const { data: diffQty } = useSWR(`compareItemsQty(${warehouseId})`, {
+    fetcher: async () => {
+      const res = await compareItems(warehouse)
+      return res.items.length
+    },
+    revalidateOnMount: false,
+    revalidateOnFocus: false,
+  })
+
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
@@ -114,11 +136,11 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
                   <Warehouse />
-                  {session?.data?.user?.warehouse?.name || 'Select Warehouse'}
+                  {warehouse?.name || 'Select Warehouse'}
                   <ChevronDown className='ml-auto' />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              {session?.data?.user?.isAdmin && (
+              {user?.isAdmin && (
                 <DropdownMenuContent>
                   {warehouses?.map((warehouse: IWarehouse) => (
                     <DropdownMenuItem
@@ -140,12 +162,20 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) =>
-                item.isAdmin && !session?.data?.user?.isAdmin ? null : (
+                item.isAdmin && !user?.isAdmin ? null : (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <a href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
+                        {item.url === 'items' && itemsQty && (
+                          <span className='ml-auto text-xs'>
+                            ({itemsQty[0]?.nonEmpty}/{itemsQty[0]?.total})
+                          </span>
+                        )}
+                        {item.url === 'settings' && diffQty && (
+                          <span className='ml-auto text-xs'>({diffQty})</span>
+                        )}
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -162,7 +192,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
                   <User2 />
-                  {session?.data?.user?.email}
+                  {user?.email}
                   <ChevronUp className='ml-auto' />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

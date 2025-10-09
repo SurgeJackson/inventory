@@ -33,6 +33,7 @@
     "culori": "^4.0.2",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.5",
+    "embla-carousel-react": "^8.6.0",
     "jose": "^6.1.0",
     "lucide-react": "^0.544.0",
     "mongodb": "^6.20.0",

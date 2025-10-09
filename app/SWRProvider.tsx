@@ -5,7 +5,12 @@ import { getAllCategories } from '@/lib/actions/category.actions'
 import { getAllWarehouses } from '@/lib/actions/warehouse.action'
 import { getAllUsers } from '@/lib/actions/user.action'
 import { getAllZones } from '@/lib/actions/zone.action'
-import { getAllIgnoreItems, getAllItems } from '@/lib/actions/item.actions'
+import {
+  compareItems,
+  getAllIgnoreItems,
+  getAllItems,
+  getItemsCodeQty,
+} from '@/lib/actions/item.actions'
 
 export default async function SWRProvider({
   children,
@@ -24,13 +29,27 @@ export default async function SWRProvider({
   ])
 
   // Fetch warehouse-scoped data in parallel (or provide fallbacks)
-  const [zonesRes, itemsWithImagesRes, ignoreItemsRes] = warehouse
+  const [
+    zonesRes,
+    itemsWithImagesRes,
+    ignoreItemsRes,
+    itemsCodeQtyRes,
+    compareItemsQtyRes,
+  ] = warehouse
     ? await Promise.all([
         getAllZones(warehouse),
         getAllItems(warehouse),
         getAllIgnoreItems(warehouse),
+        getItemsCodeQty(warehouse),
+        compareItems(warehouse),
       ])
-    : [{ zones: [] }, { items: [] }, { items: [] }]
+    : [
+        { zones: [] },
+        { items: [] },
+        { items: [] },
+        { items: [] },
+        { items: [] },
+      ]
 
   const initialData = {
     // global
@@ -43,6 +62,8 @@ export default async function SWRProvider({
       [`getAllZones(${warehouseId})`]: zonesRes.zones,
       [`getAllItems(${warehouseId})`]: itemsWithImagesRes,
       [`getAllIgnoreItems(${warehouseId})`]: ignoreItemsRes.items,
+      [`getItemsCodeQty(${warehouseId})`]: itemsCodeQtyRes.items,
+      [`compareItemsQty(${warehouseId})`]: compareItemsQtyRes.items.length,
     }),
   }
 

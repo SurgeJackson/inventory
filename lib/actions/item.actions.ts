@@ -405,3 +405,46 @@ export async function deleteItem(itemId: string) {
     }
   }
 }
+
+export async function getItemsCodeQty(warehouse: IWarehouse) {
+  await dbConnect()
+
+  const items = await Item.aggregate([
+    {
+      $match: {
+        warehouse: new Types.ObjectId(String(warehouse._id)),
+        deleted: { $ne: true },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: 1 },
+        nonEmpty: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $eq: [{ $type: '$code' }, 'string'] },
+                  { $gt: [{ $strLenCP: { $trim: { input: '$code' } } }, 0] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        total: 1,
+        nonEmpty: 1,
+        emptyOrMissing: { $subtract: ['$total', '$nonEmpty'] },
+      },
+    },
+  ])
+
+  return { items }
+}
