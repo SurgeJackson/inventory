@@ -114,6 +114,7 @@ export default function ImageDialog({ selectedItem }: { selectedItem: IItem }) {
                     width={200}
                     height={200}
                     alt='preview'
+                    unoptimized
                     className='rounded-md border object-contain max-h-56 '
                   />
                 )}
