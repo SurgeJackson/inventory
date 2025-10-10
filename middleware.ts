@@ -96,6 +96,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // Avoid loops on auth endpoints and skip static assets
   matcher: [
-    '/((?!api/auth|_next/static|_next/image|favicon\\.ico|robots\\.txt).*)',
+    '/((?!api/images|api/auth|_next/static|_next/image|favicon.ico|robots.txt).*)',
   ],
 }

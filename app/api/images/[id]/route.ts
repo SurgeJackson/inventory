@@ -1,4 +1,3 @@
-// app/api/images/[id]/route.ts
 import { ObjectId, GridFSBucket } from 'mongodb'
 import { getDb } from '@/lib/mongo'
 import { NextResponse } from 'next/server'
@@ -29,13 +28,22 @@ export async function GET(
     const dl = bucket.openDownloadStream(_id)
     const webStream = Readable.toWeb(dl) as unknown as ReadableStream
 
-    return new Response(webStream, {
-      headers: {
-        'Content-Type':
-          fileDoc.metadata?.contentType || 'application/octet-stream',
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    })
+    const contentType =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (fileDoc as any)?.metadata?.contentType ?? 'application/octet-stream'
+
+    const headers: Record<string, string> = {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Content-Disposition': 'inline',
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof (fileDoc as any).length === 'number') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      headers['Content-Length'] = String((fileDoc as any).length)
+    }
+
+    return new Response(webStream, { headers })
   } catch {
     return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
   }

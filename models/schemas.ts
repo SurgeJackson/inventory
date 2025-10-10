@@ -48,6 +48,7 @@ export const itemSchema = new Schema<IItem>(
       // required: true,
     },
     deleted: { type: Boolean, default: false },
+    userImage: { type: String },
   },
   { timestamps: true }
 )

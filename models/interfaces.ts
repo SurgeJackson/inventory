@@ -21,6 +21,7 @@ export interface IItem extends Document {
   warehouse: Types.ObjectId | IWarehouse
   zone: Types.ObjectId | IZone
   deleted: boolean
+  userImage: string
 }
 
 export interface IWarehouse extends Document {

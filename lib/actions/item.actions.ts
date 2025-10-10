@@ -16,6 +16,9 @@ import { Types } from 'mongoose'
 import { Schema, model } from 'mongoose'
 import mongoose from 'mongoose'
 
+import { ObjectId, GridFSBucket } from 'mongodb'
+import { getDb } from '@/lib/mongo'
+
 export async function getAllItems(warehouse: IWarehouse) {
   await dbConnect()
 
@@ -24,7 +27,16 @@ export async function getAllItems(warehouse: IWarehouse) {
       warehouse: warehouse._id,
       $or: [{ deleted: false }, { deleted: { $exists: false } }],
     },
-    { name: 1, sku: 1, image: 1, category: 1, warehouse: 1, zone: 1, code: 1 }
+    {
+      name: 1,
+      sku: 1,
+      image: 1,
+      category: 1,
+      warehouse: 1,
+      zone: 1,
+      code: 1,
+      userImage: 1,
+    }
   )
     .sort({ name: 1 })
     .populate<{ category: ICategory }>('category', 'name _id')
@@ -170,6 +182,34 @@ export async function updateItemZone(
     return {
       success: true,
       message: 'Зона хранения обновлена',
+    }
+  } catch (e) {
+    return {
+      success: false,
+      message: e instanceof Error ? e.message : 'Ошибка обновления',
+    }
+  }
+}
+
+export async function updateItemUserImage(
+  item: { _id: string } | string,
+  image: string
+) {
+  try {
+    await dbConnect()
+    const id = typeof item === 'string' ? item : item._id
+
+    const doc = await Item.findByIdAndUpdate(
+      id,
+      { userImage: image },
+      { new: true }
+    ).lean<IItem | null>()
+
+    if (!doc) throw new Error('Товар не найден')
+
+    return {
+      success: true,
+      message: 'Изображение товара обновлено',
     }
   } catch (e) {
     return {
@@ -447,4 +487,25 @@ export async function getItemsCodeQty(warehouse: IWarehouse) {
   ])
 
   return { items }
+}
+
+export async function deleteImageById(id: string, bucketName = 'images') {
+  try {
+    if (!ObjectId.isValid(id)) throw new Error('Invalid id')
+
+    const db = await getDb()
+    const bucket = new GridFSBucket(db, { bucketName })
+    const _id = new ObjectId(id)
+
+    const exists = await bucket.find({ _id }).hasNext()
+    if (!exists) throw new Error('Изображение товара не найдено')
+
+    await bucket.delete(_id)
+    return { success: true, message: 'Изображение товара удалёно успешно' }
+  } catch (e) {
+    return {
+      success: false,
+      message: e instanceof Error ? e.message : 'Ошибка удаления',
+    }
+  }
 }

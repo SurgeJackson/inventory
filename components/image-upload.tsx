@@ -1,18 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
-// components/image-upload.tsx
 'use client'
-
-import * as React from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input' // if you don't have one, use a plain <input>
+import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 export default function ImageUpload() {
-  const [file, setFile] = React.useState<File | null>(null)
-  const [preview, setPreview] = React.useState<string | null>(null)
-  const [imageId, setImageId] = React.useState<string | null>(null)
-  const [busy, setBusy] = React.useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [imageId, setImageId] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null
@@ -35,9 +33,8 @@ export default function ImageUpload() {
       if (!res.ok) throw new Error(json.error || 'Upload failed')
       setImageId(json.id)
       toast.success('Uploaded!')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.message || 'Upload failed')
+    } catch (err) {
+      toast.error((err as Error).message || 'Upload failed')
     } finally {
       setBusy(false)
     }

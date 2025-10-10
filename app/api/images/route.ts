@@ -1,11 +1,10 @@
-// app/api/images/route.ts
 import { NextResponse } from 'next/server'
 import { GridFSBucket } from 'mongodb'
 import { getDb } from '@/lib/mongo'
 import { Readable } from 'node:stream'
 import { once } from 'node:events'
 
-export const runtime = 'nodejs' // GridFS needs Node runtime
+export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
@@ -17,14 +16,15 @@ export async function POST(req: Request) {
 
     const db = await getDb()
     const bucket = new GridFSBucket(db, { bucketName: 'images' })
-
-    // Convert Web ReadableStream -> Node Readable
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nodeStream = Readable.fromWeb(file.stream() as any)
 
     const upload = bucket.openUploadStream(file.name, {
-      contentType: file.type || 'application/octet-stream',
-      metadata: { size: file.size, uploadedAt: new Date() },
+      metadata: {
+        contentType: file.type || 'application/octet-stream',
+        size: file.size,
+        uploadedAt: new Date(),
+      },
     })
 
     nodeStream.pipe(upload)

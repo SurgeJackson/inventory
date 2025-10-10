@@ -38,6 +38,14 @@ import ZonesGroup from './zones-toggle-group'
 
 import type { ICategory, IItem, IWarehouse, IZone } from '@/models/interfaces'
 import { Item } from '@/models/models'
+import ImageDialog from './image-dialog'
+import {
+  Carousel,
+  CarouselApi,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel'
+import { CarouselDots } from '@/components/ui/carousel-dots'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -55,6 +63,8 @@ export default function ItemsList({ category, zone }: Props) {
   const [filter, setFilter] = useState('')
   const [filterCode, setFilterCode] = useState('')
   const [noCodeFilter, setNoCodeFilter] = useState(false)
+
+  const [api, setApi] = useState<CarouselApi | null>(null)
 
   const key = warehouseId ? `getAllItems(${warehouseId})` : null
   const { data: itemData, mutate } = useSWR(
@@ -246,9 +256,10 @@ export default function ItemsList({ category, zone }: Props) {
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 text-xs'>
         {filtered?.map((item: IItem) => {
           const key = String(item._id ?? item.sku)
-          const img = item?.image
-            ? `https://sturmproject.ru/image/${item.image}`
-            : null
+          const slides = [
+            item?.image ? `https://sturmproject.ru/image/${item.image}` : null,
+            item?.userImage ? `/api/images/${item.userImage}` : null,
+          ].filter(Boolean) as string[]
 
           return (
             <Card
@@ -260,18 +271,41 @@ export default function ItemsList({ category, zone }: Props) {
               }}
             >
               <CardHeader className='p-0'>
-                <div className='relative aspect-square'>
-                  {img && (
-                    <Image
-                      src={img}
-                      alt={item.name}
-                      sizes='(max-width:768px)100vw,(max-width:1200px)50vw,33vw'
-                      fill
-                      loading='lazy'
-                      className='rounded-xl object-cover'
-                    />
-                  )}
-                </div>
+                {slides.length > 1 ? (
+                  <Carousel className='relative aspect-square' setApi={setApi}>
+                    <CarouselContent>
+                      {slides.map((src, i) => (
+                        <CarouselItem key={`${key}-${i}`}>
+                          <div className='relative aspect-square'>
+                            <Image
+                              src={src}
+                              alt={item.name}
+                              sizes='(max-width:768px)100vw,(max-width:1200px)50vw,33vw'
+                              fill
+                              loading='lazy'
+                              className='rounded-xl object-cover'
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselDots api={api} />
+                  </Carousel>
+                ) : (
+                  <div className='relative aspect-square'>
+                    {slides[0] && (
+                      <Image
+                        src={slides[0]}
+                        alt={item.name}
+                        sizes='(max-width:768px)100vw,(max-width:1200px)50vw,33vw'
+                        fill
+                        loading='lazy'
+                        className='rounded-xl object-cover'
+                      />
+                    )}
+                  </div>
+                )}
+
                 <CardTitle className='text-center'>{item.sku}</CardTitle>
                 <CardDescription className='text-center'>
                   <p>{item.name}</p>
@@ -323,7 +357,7 @@ export default function ItemsList({ category, zone }: Props) {
                 />
               )}
             </div>
-
+            <ImageDialog selectedItem={selectedItem} />
             <DialogFooter>
               <div className='flex flex-col items-center gap-2 w-full'>
                 <CategoriesGroup
