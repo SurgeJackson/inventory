@@ -107,12 +107,7 @@ export default function ImageDialog({ selectedItem }: { selectedItem: IItem }) {
             </DialogHeader>
             <DialogFooter>
               <div className='flex flex-col items-center justify-center gap-4 w-full'>
-                <Input
-                  type='file'
-                  accept='image/*'
-                  capture='environment'
-                  onChange={onPick}
-                />
+                <Input type='file' accept='image/*' onChange={onPick} />
                 {preview && (
                   <Image
                     src={preview}
