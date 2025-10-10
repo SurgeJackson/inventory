@@ -223,7 +223,7 @@ export default function ItemsList({ category, zone }: Props) {
               setFilterCode('')
               setFilter(e.target.value)
             }}
-            placeholder='Поиск по артикулу/названию или QR'
+            placeholder='Поиск по артикулу/названию/QR'
           />
           {(filter || filterCode) && (
             <Button
