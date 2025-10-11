@@ -333,7 +333,13 @@ export default function ItemsList({ category, zone }: Props) {
         })}
       </div>
       {isDialogOpen && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={() => {
+            if (isDialogOpen) mutate()
+            setIsDialogOpen(!isDialogOpen)
+          }}
+        >
           <DialogContent className='sm:max-w-md'>
             <DialogHeader>
               <DialogTitle>{selectedItem?.sku}</DialogTitle>
