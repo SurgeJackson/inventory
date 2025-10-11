@@ -2,23 +2,6 @@
 import { useSession } from 'next-auth/react'
 import useSWR, { preload } from 'swr'
 import { toast } from 'sonner'
-
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-
 import {
   compareItems,
   createIgnoreItem,
@@ -26,10 +9,10 @@ import {
   deleteItem,
   getAllItemsBySKU,
 } from '@/lib/actions/item.actions'
-import type { ICategory, IItem, IWarehouse, IZone } from '@/models/interfaces'
+import { fetcher, type IWarehouse } from '@/models/interfaces'
 import { useEffect, useState } from 'react'
-
-const fetcher = <T,>(fn: () => Promise<T>) => fn()
+import ItemCard from './item-card'
+import RemoveDialog from './remove-dialog'
 
 export default function DemoPage() {
   const { data: session } = useSession()
@@ -120,91 +103,30 @@ export default function DemoPage() {
   return (
     <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 text-xs'>
       {diffs?.map((item) => (
-        <Card key={`${item.sku}-${item.qty}`}>
-          <CardHeader>
-            <CardTitle className='text-center'>{item.sku}</CardTitle>
-          </CardHeader>
-
-          <CardContent className='flex flex-col gap-2 items-center justify-center p-0'>
-            <CardDescription className='text-center text-xs'>
-              {item.name}
-            </CardDescription>
-            <CardDescription className='text-center text-sm'>
-              Количество: {item.qty}
-            </CardDescription>
-          </CardContent>
-
-          <CardFooter className='flex flex-col gap-2'>
-            {item.qty > 0 ? (
-              <div className='flex flex-col gap-2'>
-                <Button
-                  className='w-full text-xs cursor-pointer'
-                  onClick={() => handleAccept(item.sku, item.name)}
-                >
-                  Принять на склад
-                </Button>
-
-                {user?.isAdmin && (
-                  <Button
-                    variant='outline'
-                    className='w-full text-xs cursor-pointer'
-                    onClick={() => handleIgnore(item.sku)}
-                  >
-                    Не учитывать
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <Button
-                variant='destructive'
-                className='w-full text-xs cursor-pointer'
-                onMouseEnter={() =>
-                  !warehouseId &&
-                  preload(['itemsBySku', !warehouseId, item.sku], () =>
-                    fetcher(
-                      async () =>
-                        (await getAllItemsBySKU(warehouse, item.sku)).items
-                    )
-                  )
-                }
-                onClick={() => handleOpenDialog(item.sku)}
-              >
-                Списать со склада
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+        <ItemCard
+          key={`${item.sku}-${item.qty}`}
+          item={item}
+          handleAccept={handleAccept}
+          handleIgnore={handleIgnore}
+          handleOpenDialog={handleOpenDialog}
+          handleMouseEnter={() =>
+            !warehouseId &&
+            preload(['itemsBySku', !warehouseId, item.sku], () =>
+              fetcher(
+                async () => (await getAllItemsBySKU(warehouse, item.sku)).items
+              )
+            )
+          }
+        />
       ))}
       {isDialogOpen && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className='sm:max-w-md'>
-            <DialogHeader>
-              <DialogTitle>{selectedItemSKU || '—'}</DialogTitle>
-            </DialogHeader>
-            <div className='grid grid-cols-3 gap-1 text-xs'>
-              {items?.map((it: IItem) => (
-                <Card
-                  className='cursor-pointer p-2'
-                  key={String(it._id)}
-                  onClick={() => handleDeleteItem(String(it._id))}
-                >
-                  <CardHeader className='p-0'>
-                    <CardTitle className='text-center text-xs truncate'>
-                      {it.sku}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className='flex flex-col gap-2 items-center justify-center p-0'>
-                    <CardDescription className='flex flex-col gap-1 text-center text-xs'>
-                      <p>{(it.zone as IZone)?.name}</p>
-                      <p>{it.code}</p>
-                      <p>{(it.category as ICategory)?.name}</p>
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <RemoveDialog
+          items={items}
+          selectedItemSKU={selectedItemSKU}
+          handleDeleteItem={handleDeleteItem}
+          isDialogOpen={isDialogOpen}
+          setIsDialogOpen={setIsDialogOpen}
+        />
       )}
     </div>
   )

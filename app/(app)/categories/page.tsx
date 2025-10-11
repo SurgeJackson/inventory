@@ -18,19 +18,10 @@ import { MoreHorizontal } from 'lucide-react'
 import { ColumnDef } from '@tanstack/react-table'
 import { ICategory } from '@/models/interfaces'
 import { DataTable } from '@/components/data-table'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
+import AlertDeleteDialog from '@/components/alert-delete-dialog'
 // import { copyImages } from '@/lib/actions/item.actions'
 
 export default function CategoriesPage() {
@@ -126,36 +117,22 @@ export default function CategoriesPage() {
         />
       )}
       {isDeleteDialogOpen && (
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Удалить категорию</AlertDialogTitle>
-              <AlertDialogDescription>
-                Вы уверены, что хотите удалить эту категорию?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  if (selectedRowData && selectedRowData._id) {
-                    deleteCategory(selectedRowData._id.toString()).then((res) =>
-                      res.success
-                        ? toast.success(res.message)
-                        : toast.error(res.message)
-                    )
-                  }
-                  setIsDeleteDialogOpen(false)
-                }}
-              >
-                Продолжить
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <AlertDeleteDialog
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          handleDelete={async () => {
+            if (selectedRowData && selectedRowData._id) {
+              deleteCategory(selectedRowData._id.toString()).then((res) =>
+                res.success
+                  ? toast.success(res.message)
+                  : toast.error(res.message)
+              )
+            }
+            setIsDeleteDialogOpen(false)
+          }}
+          title={'Удалить категорию'}
+          description={'Вы уверены, что хотите удалить эту категорию?'}
+        />
       )}
     </div>
   ) : (

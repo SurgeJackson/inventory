@@ -14,20 +14,11 @@ import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 import { ColumnDef } from '@tanstack/react-table'
 import { IUser } from '@/models/interfaces'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
 import { deleteZone, getAllZones } from '@/lib/actions/zone.action'
+import AlertDeleteDialog from '@/components/alert-delete-dialog'
 
 export default function ZonesPage() {
   const currentUser = useSession().data?.user
@@ -121,36 +112,22 @@ export default function ZonesPage() {
         />
       )}
       {isDeleteDialogOpen && (
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Удалить зону хранения</AlertDialogTitle>
-              <AlertDialogDescription>
-                Вы уверены, что хотите удалить эту зону хранения?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  if (selectedRowData && selectedRowData._id) {
-                    deleteZone(selectedRowData._id.toString()).then((res) =>
-                      res.success
-                        ? toast.success(res.message)
-                        : toast.error(res.message)
-                    )
-                  }
-                  setIsDeleteDialogOpen(false)
-                }}
-              >
-                Продолжить
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <AlertDeleteDialog
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          handleDelete={async () => {
+            if (selectedRowData && selectedRowData._id) {
+              deleteZone(selectedRowData._id.toString()).then((res) =>
+                res.success
+                  ? toast.success(res.message)
+                  : toast.error(res.message)
+              )
+            }
+            setIsDeleteDialogOpen(false)
+          }}
+          title={'Удалить зону хранения'}
+          description={'Вы уверены, что хотите удалить эту зону хранения?'}
+        />
       )}
     </div>
   ) : (

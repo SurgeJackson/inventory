@@ -14,19 +14,10 @@ import { Check, MoreHorizontal } from 'lucide-react'
 import { ColumnDef } from '@tanstack/react-table'
 import { deleteUser, getAllUsers } from '@/lib/actions/user.action'
 import { IUser } from '@/models/interfaces'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
+import AlertDeleteDialog from '@/components/alert-delete-dialog'
 
 export default function UsersPage() {
   const currentUser = useSession().data?.user
@@ -130,36 +121,22 @@ export default function UsersPage() {
         />
       )}
       {isDeleteDialogOpen && (
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Удалить пользователя</AlertDialogTitle>
-              <AlertDialogDescription>
-                Вы уверены, что хотите удалить этого пользователя?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  if (selectedRowData && selectedRowData._id) {
-                    deleteUser(selectedRowData._id.toString()).then((res) =>
-                      res.success
-                        ? toast.success(res.message)
-                        : toast.error(res.message)
-                    )
-                  }
-                  setIsDeleteDialogOpen(false)
-                }}
-              >
-                Продолжить
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <AlertDeleteDialog
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          handleDelete={async () => {
+            if (selectedRowData && selectedRowData._id) {
+              deleteUser(selectedRowData._id.toString()).then((res) =>
+                res.success
+                  ? toast.success(res.message)
+                  : toast.error(res.message)
+              )
+            }
+            setIsDeleteDialogOpen(false)
+          }}
+          title={'Удалить пользователя'}
+          description={'Вы уверены, что хотите удалить этого пользователя?'}
+        />
       )}
     </div>
   ) : (

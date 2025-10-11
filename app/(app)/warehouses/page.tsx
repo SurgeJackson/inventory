@@ -18,19 +18,10 @@ import {
   getAllWarehouses,
 } from '@/lib/actions/warehouse.action'
 import { IWarehouse } from '@/models/interfaces'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
+import AlertDeleteDialog from '@/components/alert-delete-dialog'
 
 export default function WarehousesPage() {
   const currentUser = useSession().data?.user
@@ -125,37 +116,22 @@ export default function WarehousesPage() {
         />
       )}
       {isDeleteDialogOpen && (
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Удалить склад</AlertDialogTitle>
-              <AlertDialogDescription>
-                Вы уверены, что хотите удалить этот склад?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  if (selectedRowData && selectedRowData._id) {
-                    deleteWarehouse(selectedRowData._id.toString()).then(
-                      (res) =>
-                        res.success
-                          ? toast.success(res.message)
-                          : toast.error(res.message)
-                    )
-                  }
-                  setIsDeleteDialogOpen(false)
-                }}
-              >
-                Продолжить
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <AlertDeleteDialog
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          handleDelete={async () => {
+            if (selectedRowData && selectedRowData._id) {
+              deleteWarehouse(selectedRowData._id.toString()).then((res) =>
+                res.success
+                  ? toast.success(res.message)
+                  : toast.error(res.message)
+              )
+            }
+            setIsDeleteDialogOpen(false)
+          }}
+          title={'Удалить склад'}
+          description={'Вы уверены, что хотите удалить этот склад?'}
+        />
       )}
     </div>
   ) : (

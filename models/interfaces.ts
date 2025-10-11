@@ -46,3 +46,4 @@ export interface IIgnoreItem extends Document {
 }
 
 export type FlatItem = { sku: string; name: string; qty: number }
+export const fetcher = <T>(fn: () => Promise<T>) => fn()
