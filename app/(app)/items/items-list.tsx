@@ -2,30 +2,12 @@
 import { useMemo, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
-import Image from 'next/image'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { CircleCheckBig, CircleX, Search, X } from 'lucide-react'
+import type { IItem, IWarehouse } from '@/models/interfaces'
+import { Item } from '@/models/models'
+import ItemDialog from './item-dialog'
+import ItemCard from './item-card'
 
 import {
   getAllItems,
@@ -33,38 +15,28 @@ import {
   updateItemCode,
   updateItemZone,
 } from '@/lib/actions/item.actions'
-import CategoriesGroup from './categories-toggle-group'
-import ZonesGroup from './zones-toggle-group'
-
-import type { ICategory, IItem, IWarehouse, IZone } from '@/models/interfaces'
-import { Item } from '@/models/models'
-import ImageDialog from './image-dialog'
-import {
-  Carousel,
-  CarouselApi,
-  CarouselContent,
-  CarouselItem,
-} from '@/components/ui/carousel'
-import { CarouselDots } from '@/components/ui/carousel-dots'
+import ItemsListFilter from './items-list-filter'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-type Props = { category: string; zone: string }
-
-export default function ItemsList({ category, zone }: Props) {
+export default function ItemsList({
+  category,
+  zone,
+}: {
+  category: string
+  zone: string
+}) {
   const { data: session } = useSession()
   const warehouse = session?.user?.warehouse as IWarehouse | undefined
   const warehouseId = warehouse?._id?.toString()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<IItem>(new Item())
+  const [selectedItem, setSelectedItem] = useState<IItem>({} as IItem)
 
   const [filter, setFilter] = useState('')
   const [filterCode, setFilterCode] = useState('')
   const [noCodeFilter, setNoCodeFilter] = useState(false)
-
-  const [api, setApi] = useState<CarouselApi | null>(null)
 
   const key = warehouseId ? `getAllItems(${warehouseId})` : null
   const { data: itemData, mutate } = useSWR(
@@ -211,177 +183,39 @@ export default function ItemsList({ category, zone }: Props) {
 
   return (
     <div className='flex flex-col gap-2'>
-      {/* Панель фильтров */}
-      <div className='flex gap-2'>
-        <div className='flex items-center gap-1 w-full'>
-          <Search className='w-5 h-5' strokeWidth={1} />
-          <Input
-            id='search'
-            value={filter}
-            onKeyDown={handleFilterEnter}
-            onChange={(e) => {
-              setFilterCode('')
-              setFilter(e.target.value)
-            }}
-            placeholder='Поиск по артикулу/названию/QR'
-          />
-          {(filter || filterCode) && (
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={() => {
-                setFilter('')
-                setFilterCode('')
-              }}
-              aria-label='Очистить фильтр'
-            >
-              <X className='w-5 h-5' strokeWidth={1} />
-            </Button>
-          )}
-        </div>
-
-        <div className='flex items-center gap-1'>
-          <Switch
-            id='no-qr'
-            checked={noCodeFilter}
-            onCheckedChange={setNoCodeFilter}
-          />
-          <Label className='text-nowrap text-xs' htmlFor='no-qr'>
-            Без QR
-          </Label>
-        </div>
-      </div>
-
-      {/* Сетка карточек */}
+      <ItemsListFilter
+        filter={filter}
+        filterCode={filterCode}
+        noCodeFilter={noCodeFilter}
+        setFilter={setFilter}
+        setFilterCode={setFilterCode}
+        setNoCodeFilter={setNoCodeFilter}
+        handleFilterEnter={handleFilterEnter}
+      />
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 text-xs'>
         {filtered?.map((item: IItem) => {
           const key = String(item._id ?? item.sku)
-          const slides = [
-            item?.image ? `https://sturmproject.ru/image/${item.image}` : null,
-            item?.userImage ? `/api/images/${item.userImage}` : null,
-          ].filter(Boolean) as string[]
-
           return (
-            <Card
+            <ItemCard
+              item={item}
               key={key}
-              className='cursor-pointer gap-2 p-2'
-              onClick={() => {
-                setSelectedItem(item)
-                setIsDialogOpen(true)
-              }}
-            >
-              <CardHeader className='p-0'>
-                {slides.length > 1 ? (
-                  <Carousel className='relative aspect-square' setApi={setApi}>
-                    <CarouselContent>
-                      {slides.map((src, i) => (
-                        <CarouselItem key={`${key}-${i}`}>
-                          <div className='relative aspect-square'>
-                            <Image
-                              src={src}
-                              alt={item.name}
-                              sizes='(max-width:768px)100vw,(max-width:1200px)50vw,33vw'
-                              fill
-                              loading='lazy'
-                              className='rounded-xl object-cover'
-                            />
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselDots api={api} />
-                  </Carousel>
-                ) : (
-                  <div className='relative aspect-square'>
-                    {slides[0] && (
-                      <Image
-                        src={slides[0]}
-                        alt={item.name}
-                        sizes='(max-width:768px)100vw,(max-width:1200px)50vw,33vw'
-                        fill
-                        loading='lazy'
-                        className='rounded-xl object-cover'
-                      />
-                    )}
-                  </div>
-                )}
-
-                <CardTitle className='text-center'>{item.sku}</CardTitle>
-                <CardDescription className='text-center'>
-                  <p>{item.name}</p>
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className='flex flex-col items-center justify-center p-0'>
-                {item.code ? (
-                  <CircleCheckBig
-                    className='w-8 h-8 text-green-600'
-                    strokeWidth={2}
-                  />
-                ) : (
-                  <CircleX className='w-8 h-8 text-red-700' strokeWidth={2} />
-                )}
-              </CardContent>
-
-              <CardFooter className='flex flex-col items-center justify-center p-0 text-[11px]'>
-                <p className='truncate w-full text-center'>{item.code}</p>
-                <p>{(item.category as ICategory)?.name}</p>
-                <p>{(item.zone as IZone)?.name}</p>
-              </CardFooter>
-            </Card>
+              setSelectedItem={setSelectedItem}
+              setIsDialogOpen={setIsDialogOpen}
+            />
           )
         })}
       </div>
       {isDialogOpen && (
-        <Dialog
-          open={isDialogOpen}
-          onOpenChange={() => {
-            if (isDialogOpen) mutate()
-            setIsDialogOpen(!isDialogOpen)
-          }}
-        >
-          <DialogContent className='sm:max-w-md'>
-            <DialogHeader>
-              <DialogTitle>{selectedItem?.sku}</DialogTitle>
-              <DialogDescription>{selectedItem?.name}</DialogDescription>
-            </DialogHeader>
-
-            <div className='flex items-center gap-2'>
-              {selectedItem?.code ? (
-                <div className='flex items-center justify-around gap-2'>
-                  <Label htmlFor='qr-value'>{selectedItem.code}</Label>
-                  <Button size='sm' variant='outline' onClick={handleQRDelete}>
-                    <X className='w-5 h-5' strokeWidth={1} />
-                  </Button>
-                </div>
-              ) : (
-                <Input
-                  id='qr-input'
-                  placeholder='Отсканируйте QR'
-                  onKeyDown={handleEnterInInput}
-                  defaultValue=''
-                />
-              )}
-            </div>
-            <ImageDialog selectedItem={selectedItem} />
-            <DialogFooter>
-              <div className='flex flex-col items-center gap-2 w-full'>
-                <CategoriesGroup
-                  showAll={false}
-                  handleValueChange={handleCategoryChange}
-                  defaultValue={(
-                    selectedItem?.category as ICategory
-                  )?._id?.toString()}
-                />
-                <ZonesGroup
-                  showAll={false}
-                  handleValueChange={handleZoneChange}
-                  defaultValue={(selectedItem?.zone as IZone)?._id?.toString()}
-                />
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ItemDialog
+          selectedItem={selectedItem}
+          handleQRDelete={handleQRDelete}
+          handleEnterInInput={handleEnterInInput}
+          isDialogOpen={isDialogOpen}
+          setIsDialogOpen={setIsDialogOpen}
+          mutate={mutate}
+          handleCategoryChange={handleCategoryChange}
+          handleZoneChange={handleZoneChange}
+        />
       )}
     </div>
   )
