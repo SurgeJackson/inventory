@@ -5,7 +5,6 @@ import useSWR from 'swr'
 import { toast } from 'sonner'
 
 import type { IItem, IWarehouse } from '@/models/interfaces'
-import { Item } from '@/models/models'
 import ItemDialog from './item-dialog'
 import ItemCard from './item-card'
 
