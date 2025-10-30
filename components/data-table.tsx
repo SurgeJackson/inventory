@@ -87,7 +87,11 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className='flex items-center justify-end space-x-2 py-4'>
+      <div className='p-10'></div>
+      <div
+        className='flex items-center justify-end space-x-2 p-2 
+      fixed bottom-0 left-0 right-0 w-full bg-white border'
+      >
         <Button
           variant='outline'
           size='sm'
