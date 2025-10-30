@@ -3,6 +3,8 @@ import {
   ICategory,
   IIgnoreItem,
   IItem,
+  IOrganization,
+  ISaleLog,
   IUser,
   IWarehouse,
   IZone,
@@ -91,6 +93,24 @@ export const ignoreItemSchema = new Schema<IIgnoreItem>(
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',
     },
+  },
+  { timestamps: true }
+)
+
+export const organizationSchema = new Schema<IOrganization>(
+  {
+    name: { type: String, required: true, unique: true },
+    inn: { type: String, required: true, unique: true },
+    torgKey: { type: String, required: true },
+    buhKey: { type: String, required: true },
+  },
+  { timestamps: true }
+)
+
+export const saleLogSchema = new Schema<ISaleLog>(
+  {
+    saleKey: { type: String },
+    updateDate: { type: Date },
   },
   { timestamps: true }
 )

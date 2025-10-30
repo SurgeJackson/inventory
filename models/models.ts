@@ -1,10 +1,18 @@
 import { model, models } from 'mongoose'
-import { ICategory, IItem, IUser, IWarehouse } from './interfaces'
+import {
+  ICategory,
+  IItem,
+  IOrganization,
+  IUser,
+  IWarehouse,
+} from './interfaces'
 import {
   categorySchema,
   ignoreItemSchema,
   itemImgSchema,
   itemSchema,
+  organizationSchema,
+  saleLogSchema,
   userSchema,
   warehouseSchema,
   zoneSchema,
@@ -26,3 +34,9 @@ export const IgnoreItem =
   models?.IgnoreItem || model('IgnoreItem', ignoreItemSchema)
 
 export const Zone = models?.Zone || model('Zone', zoneSchema)
+
+export const Organization =
+  models?.Organization ||
+  model<IOrganization>('Organization', organizationSchema)
+
+export const SaleLog = models?.SaleLog || model('SaleLog', saleLogSchema)

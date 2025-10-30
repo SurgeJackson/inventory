@@ -47,3 +47,17 @@ export interface IIgnoreItem extends Document {
 
 export type FlatItem = { sku: string; name: string; qty: number }
 export const fetcher = <T>(fn: () => Promise<T>) => fn()
+
+export interface IOrganization extends Document {
+  _id: Types.ObjectId
+  name: string
+  inn: string
+  torgKey: string
+  buhKey: string
+}
+
+export interface ISaleLog extends Document {
+  _id: Types.ObjectId
+  saleKey: string
+  updateDate: Date
+}

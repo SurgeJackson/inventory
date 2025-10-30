@@ -1,5 +1,6 @@
 'use client'
 import {
+  AlignHorizontalJustifyStart,
   Ban,
   Boxes,
   ChartBarStacked,
@@ -85,6 +86,12 @@ const items = [
     title: 'Неучитываемые товары',
     url: 'ignore-items',
     icon: Ban,
+    isAdmin: true,
+  },
+  {
+    title: 'Реализаций в бухгалтерию',
+    url: 'sales',
+    icon: AlignHorizontalJustifyStart,
     isAdmin: true,
   },
 ]
