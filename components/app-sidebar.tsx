@@ -89,7 +89,7 @@ const items = [
     isAdmin: true,
   },
   {
-    title: 'Реализаций в бухгалтерию',
+    title: 'Реализации в бухгалтерию',
     url: 'sales',
     icon: AlignHorizontalJustifyStart,
     isAdmin: true,
