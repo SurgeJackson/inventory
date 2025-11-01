@@ -11,6 +11,7 @@ import {
   ignoreItemSchema,
   itemImgSchema,
   itemSchema,
+  maxItemCodeSchema,
   organizationSchema,
   saleLogSchema,
   userSchema,
@@ -40,3 +41,6 @@ export const Organization =
   model<IOrganization>('Organization', organizationSchema)
 
 export const SaleLog = models?.SaleLog || model('SaleLog', saleLogSchema)
+
+export const MaxItemCode =
+  models?.MaxItemCode || model('MaxItemCode', maxItemCodeSchema)

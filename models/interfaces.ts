@@ -61,3 +61,8 @@ export interface ISaleLog extends Document {
   saleKey: string
   updateDate: Date
 }
+
+export interface IMaxItemCode extends Document {
+  _id: Types.ObjectId
+  maxItemCode: string
+}

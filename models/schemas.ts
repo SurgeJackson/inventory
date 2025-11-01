@@ -3,6 +3,7 @@ import {
   ICategory,
   IIgnoreItem,
   IItem,
+  IMaxItemCode,
   IOrganization,
   ISaleLog,
   IUser,
@@ -111,6 +112,13 @@ export const saleLogSchema = new Schema<ISaleLog>(
   {
     saleKey: { type: String },
     updateDate: { type: Date },
+  },
+  { timestamps: true }
+)
+
+export const maxItemCodeSchema = new Schema<IMaxItemCode>(
+  {
+    maxItemCode: { type: String },
   },
   { timestamps: true }
 )

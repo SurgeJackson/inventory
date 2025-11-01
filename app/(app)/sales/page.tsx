@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { createBuhSale, get1CSales } from '@/lib/actions/1c.actions'
+import {
+  createBuhSale,
+  get1CSales,
+  // getTorgMaxItemCode,
+  // syncGoods,
+} from '@/lib/actions/1c.actions'
 import { DataTable } from '../../../components/data-table'
 import { ColumnDef } from '@tanstack/react-table'
 import { useEffect, useState } from 'react'
@@ -23,9 +28,16 @@ import { ru } from 'react-day-picker/locale'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getAllSaleLogs } from '@/lib/actions/saleLog.action'
+// import { getMaxItemCode } from '@/lib/actions/maxitemcode.action'
+import { useSetCookie, useGetCookie } from 'cookies-next'
 
 export default function SalesPage() {
   const [data, setData] = useState([])
+  // const [maxItemTorgCode, setMaxItemTorgCode] = useState(0)
+  // const [maxItemCode, setMaxItemCode] = useState(0)
+
+  const setCookie = useSetCookie()
+  const getCookie = useGetCookie()
 
   const [startDate, setStartDate] = useState<Date | undefined>(new Date())
   const [startOpen, setStartOpen] = useState(false)
@@ -37,6 +49,13 @@ export default function SalesPage() {
       res.success ? toast.success(res.message) : toast.error(res.message)
     )
   }
+
+  useEffect(() => {
+    const startDateCookie = getCookie('startDate')
+    const endDateCookie = getCookie('endDate')
+    if (startDateCookie) setStartDate(new Date(startDateCookie))
+    if (endDateCookie) setEndDate(new Date(endDateCookie))
+  }, [getCookie])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +78,12 @@ export default function SalesPage() {
         })
       })
       setData(data)
+
+      // const maxItemTorgCode = await getTorgMaxItemCode()
+      // const maxItemCode = await getMaxItemCode()
+
+      // setMaxItemTorgCode(maxItemTorgCode)
+      // setMaxItemCode(maxItemCode.maxItemCode.maxItemCode)
     }
     fetchData()
   }, [startDate, endDate])
@@ -244,6 +269,18 @@ export default function SalesPage() {
       <h1 className='text-center text-2xl font-semibold p-2'>
         Перенос реализаций в бухгалтерию
       </h1>
+      {/* <div>
+        <p>{maxItemTorgCode}</p>
+        <p>{maxItemCode}</p>
+        <Button
+          variant='outline'
+          onClick={async () => {
+            await syncGoods()
+          }}
+        >
+          SyncGoods
+        </Button>
+      </div> */}
       <div className='flex gap-2 p-2'>
         <Label>Период</Label>
         <Popover open={startOpen} onOpenChange={setStartOpen}>
@@ -267,6 +304,9 @@ export default function SalesPage() {
               onSelect={(startDate) => {
                 setStartDate(startDate)
                 setStartOpen(false)
+                setCookie('startDate', startDate?.toISOString(), {
+                  maxAge: 60 * 60 * 24 * 7,
+                })
               }}
             />
           </PopoverContent>
@@ -293,6 +333,9 @@ export default function SalesPage() {
               onSelect={(endDate) => {
                 setEndDate(endDate)
                 setEndOpen(false)
+                setCookie('endDate', endDate?.toISOString(), {
+                  maxAge: 60 * 60 * 24 * 7,
+                })
               }}
             />
           </PopoverContent>
